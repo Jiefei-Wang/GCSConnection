@@ -3,10 +3,13 @@
 #include <string>
 
 namespace gcs = google::cloud::storage;
+using namespace google::cloud;
 
 #define ERROR_CLIENT_NOT_AVAILABLE "Client is not available"
 
-using namespace google::cloud;
+
+
+char * credentials = new char[512];
 gcs::Client* client = NULL;
 std::string* projectId = NULL;
 
@@ -18,28 +21,17 @@ int sendError(const std::string msg) {
 }
 
 
-
-
-
-int initialClient(const char * project, const char * creds) {
-	if (creds == NULL) {
-		auto creds = gcs::oauth2::GoogleDefaultCredentials();
-		if (!creds) {
-			return sendError(creds.status().message());
-		}
-		client = new gcs::Client(*creds);
-	}
-	else {
-		std::string path = std::string(creds);
-		auto creds =
-			gcs::oauth2::CreateServiceAccountCredentialsFromJsonFilePath(path);
-		if (!creds) {
-			return sendError(creds.status().message());
-		}
-		client = new gcs::Client(gcs::ClientOptions(*creds));
-	}
-	setProject(project);
-	return 0;
+int setCredential(const char* cred){
+  strcpy(credentials,cred);
+  std::string path = std::string(credentials);
+  auto creds =
+    gcs::oauth2::CreateServiceAccountCredentialsFromJsonFilePath(path);
+  if (!creds) {
+    return sendError(creds.status().message());
+  }
+  if (client != NULL) delete client;
+  client = new gcs::Client(gcs::ClientOptions(*creds));
+  return 0;
 }
 
 
@@ -74,7 +66,7 @@ int getBucketName(int index, char* name) {
 	if (!(*ith)) {
 		return sendError((*ith).status().message());
 	}
-	strcpy_s(name, (*ith)->name().size() + 1, (*ith)->name().c_str());
+	strcpy(name,(*ith)->name().c_str());
 	return 0;
 }
 

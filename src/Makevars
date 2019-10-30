@@ -1,5 +1,7 @@
 CXX_STD=CXX11
+GCS_CXXFLAGS   := $(shell pkg-config storage_client --cflags)
+GCS_CXXLDFLAGS := $(shell pkg-config storage_client --libs-only-L)
+GCS_LIBS       := $(shell pkg-config storage_client --libs-only-l)
 
-
-PKG_LIBS = -L. -lcloudStorage_VS -lstorage_client  -lWs2_32 -lWldap32 -lCrypt32 -lkernel32 -luser32 -lgdi32 -lwinspool -lcomdlg32 -ladvapi32 -lshell32 -lole32 -loleaut32 -luuid -lodbc32 -lodbccp32
-
+PKG_CPPFLAGS = $(CXXFLAGS) $(GCS_CXXFLAGS) -fPIC
+PKG_LIBS = $(GCS_CXXLDFLAGS) $(GCS_LIBS) -lz  -lcares

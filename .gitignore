@@ -44,3 +44,5 @@ src/*.o
 src/*.dll
 src/*.so
 src/*.lib
+
+inst/test/
