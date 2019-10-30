@@ -5,19 +5,21 @@
 
 using namespace Rcpp;
 
-// rcpp_hello_world
-List rcpp_hello_world();
-RcppExport SEXP _googleCloudStorage_rcpp_hello_world() {
+// C_initialClient
+int C_initialClient(SEXP R_project, SEXP R_creds);
+RcppExport SEXP _googleCloudStorage_C_initialClient(SEXP R_projectSEXP, SEXP R_credsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpp_hello_world());
+    Rcpp::traits::input_parameter< SEXP >::type R_project(R_projectSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type R_creds(R_credsSEXP);
+    rcpp_result_gen = Rcpp::wrap(C_initialClient(R_project, R_creds));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_googleCloudStorage_rcpp_hello_world", (DL_FUNC) &_googleCloudStorage_rcpp_hello_world, 0},
+    {"_googleCloudStorage_C_initialClient", (DL_FUNC) &_googleCloudStorage_C_initialClient, 2},
     {NULL, NULL, 0}
 };
 

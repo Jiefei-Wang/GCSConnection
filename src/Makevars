@@ -1,0 +1,5 @@
+CXX_STD=CXX11
+
+
+PKG_LIBS = -L. -lcloudStorage_VS -lstorage_client  -lWs2_32 -lWldap32 -lCrypt32 -lkernel32 -luser32 -lgdi32 -lwinspool -lcomdlg32 -ladvapi32 -lshell32 -lole32 -loleaut32 -luuid -lodbc32 -lodbccp32
+
