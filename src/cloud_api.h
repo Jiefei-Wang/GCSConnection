@@ -3,6 +3,8 @@
 #define NULL 0
 #endif // !NULL
 
+
+
 int setCredential(const char* cred);
 
 void setProject(const char* project);
