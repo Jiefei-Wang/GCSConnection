@@ -37,3 +37,10 @@ std::vector<std::string> C_get_bucket_names(){
   return(v);
 }
 
+extern "C" SEXP getBucketConnection(SEXP credentials, SEXP project, SEXP bucket, SEXP file);
+
+// [[Rcpp::export]]
+SEXP getBucketConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEXP file){
+  return getBucketConnection(credentials,project, bucket,file);
+}
+

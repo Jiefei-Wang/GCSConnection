@@ -1,5 +1,5 @@
-#include "R_ext/Connections.h"
-#include <Rcpp.h>
+#include "connection.h"
+#include "google/cloud/storage/client.h"
 #include "macro.h"
 using namespace google::cloud;
 /*
@@ -37,6 +37,8 @@ struct bucketCon {
 };
 
 
+
+
 void* createBuckekConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEXP file) {
 	bucketConnection bc = new bucketCon;
 	bc->projectName = TOCHAR(project);
@@ -72,24 +74,24 @@ void destropBucketConnectionCPP(void* cbc) {
 }
 
 
-template<class T>
-size_t getStreamSize(T s) {
-	size_t off = s->tellg();
-	s->seekg(0, s->end);
-	size_t length = s->tellg() - off;
-	s->seekg(0, off);
+
+size_t getStreamSize(gcs::ObjectReadStream& s) {
+	size_t off = s.tellg();
+	s.seekg(0, s.end);
+	size_t length = (size_t)s.tellg() - off;
+	s.seekg(off);
 	return length;
 }
 
 
 size_t readBucketConnectionCPP(void* target, size_t sz, size_t ni, void* cbc) {
 	bucketConnection bc = (bucketConnection)cbc;
-	size_t rest_len = getStreamSize(bc);
+	size_t rest_len = getStreamSize(bc->readCon);
 	size_t req_size = sz * ni;
 	size_t read_size = rest_len > req_size ? req_size : rest_len;
-	std::istream status = bc->readCon.read((char*)target, read_size);
+	std::istream& status = bc->readCon.read((char*)target, read_size);
 	bc->writeCon.seekp(bc->readCon.tellg());
-
+	
 	return read_size;
 }
 

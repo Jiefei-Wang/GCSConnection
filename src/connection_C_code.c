@@ -1,5 +1,5 @@
-#include "R_ext/Connections.h"
 #include "Rinternals.h"
+#include "R_ext/Connections.h"
 #include "macro.h"
 #include "connection.h"
 
@@ -9,7 +9,9 @@ void bucket_destroy(Rconnection con);
 size_t bucket_read(void* target, size_t sz, size_t ni, Rconnection con);
 size_t bucket_write(const void* target, size_t sz, size_t ni, Rconnection con);
 
-// [[Rcpp::export]]
+
+
+
 SEXP getBucketConnection(SEXP credentials, SEXP project, SEXP bucket, SEXP file) {
 	Rconnection con;
 	SEXP rc = PROTECT(R_new_custom_connection(TOCHAR(file), "rw", "googleBucket", &con));
