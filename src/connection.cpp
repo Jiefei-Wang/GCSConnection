@@ -1,7 +1,4 @@
-#include "connection.h"
-extern "C"{
 #include "R_ext/Connections.h"
-}
 #include <Rcpp.h>
 #include "macro.h"
 using namespace google::cloud;
@@ -18,21 +15,30 @@ struct bucketCon {
 	gcs::ObjectWriteStream writeCon;
 };
 */
+#include "connection.h"
 
-static Rboolean bucket_open(Rconnection con);
-void bucket_close(Rconnection con);
-void bucket_destroy(Rconnection con);
-size_t bucket_read(void* target, size_t sz, size_t ni, Rconnection con);
-size_t bucket_write(const void* target, size_t sz, size_t ni, Rconnection con);
 
-// [[Rcpp::export]]
-SEXP getBucketConnection(SEXP credentials, SEXP project, SEXP bucket, SEXP file) {
-	Rconnection con;
-	SEXP rc = PROTECT(R_new_custom_connection(TOCHAR(file), "rw", "googleBucket", &con));
+#include <string>
+#include "google/cloud/storage/client.h"
 
+namespace gcs = google::cloud::storage;
+typedef struct bucketCon* bucketConnection;
+
+struct bucketCon {
+	std::string credentials;
+	std::string projectName;
+	std::string bucketName;
+	std::string fileName;
+
+	gcs::Client* client = NULL;
+
+	gcs::ObjectReadStream readCon;
+	gcs::ObjectWriteStream writeCon;
+};
+
+
+void* createBuckekConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEXP file) {
 	bucketConnection bc = new bucketCon;
-
-
 	bc->projectName = TOCHAR(project);
 	bc->bucketName = TOCHAR(bucket);
 	bc->fileName = TOCHAR(file);
@@ -42,78 +48,55 @@ SEXP getBucketConnection(SEXP credentials, SEXP project, SEXP bucket, SEXP file)
 		Rf_error(creds.status().message().c_str());
 	}
 	bc->client = new gcs::Client(gcs::ClientOptions(*creds));
-
-	con->incomplete = FALSE;
-	con->private = bc;
-	con->canseek = FALSE;
-	con->canwrite = TRUE;
-	con->isopen = FALSE;
-	con->blocking = TRUE;
-	con->text = TRUE;
-	con->UTF8out = TRUE;
-	con->open = bucket_open;
-	con->close = bucket_close;
-	con->destroy = bucket_destroy;
-	con->read = bucket_read;
-	con->write = bucket_write;
-  UNPROTECT(1);
-  return rc;
+	return bc;
 }
 
 
-
-
-static Rboolean bucket_open(Rconnection con) {
-	bucketConnection bc = (bucketConnection)con->private;
-
+void openBucketConnectionCPP(void* cbc) {
+	bucketConnection bc = (bucketConnection)cbc;
 	bc->readCon = bc->client->ReadObject(bc->bucketName.c_str(), bc->fileName.c_str());
 	bc->writeCon = bc->client->WriteObject(bc->bucketName.c_str(), bc->fileName.c_str());
-
-	con->isopen = TRUE;
-	con->incomplete = TRUE;
-	return TRUE;
 }
 
-void bucket_close(Rconnection con) {
-	bucketConnection bc = (bucketConnection)con->private;
-	
+
+void closeBucketConnectionCPP(void* cbc) {
+	bucketConnection bc = (bucketConnection)cbc;
 	bc->readCon.Close();
 	bc->writeCon.Close();
-
-	con->isopen = FALSE;
-	con->incomplete = FALSE;
 }
 
-void bucket_destroy(Rconnection con) {
-	bucketConnection bc = (bucketConnection)con->private;
+
+void destropBucketConnectionCPP(void* cbc) {
+	bucketConnection bc = (bucketConnection)cbc;
 	delete bc->client;
 }
+
+
 template<class T>
 size_t getStreamSize(T s) {
 	size_t off = s->tellg();
 	s->seekg(0, s->end);
-	size_t length = s->tellg()- off;
+	size_t length = s->tellg() - off;
 	s->seekg(0, off);
 	return length;
 }
 
 
-size_t bucket_read(void* target, size_t sz, size_t ni, Rconnection con) {
-	bucketConnection bc = (bucketConnection)con->private;
+size_t readBucketConnectionCPP(void* target, size_t sz, size_t ni, void* cbc) {
+	bucketConnection bc = (bucketConnection)cbc;
 	size_t rest_len = getStreamSize(bc);
 	size_t req_size = sz * ni;
 	size_t read_size = rest_len > req_size ? req_size : rest_len;
-	std::istream status = bc->readCon.read((char *)target, read_size);
+	std::istream status = bc->readCon.read((char*)target, read_size);
 	bc->writeCon.seekp(bc->readCon.tellg());
 
-	con->incomplete = read_size != rest_len ? TRUE:FALSE;
 	return read_size;
 }
 
-size_t bucket_write(const void* target, size_t sz, size_t ni, Rconnection con) {
-	bucketConnection bc = (bucketConnection)con->private;
+size_t writeBucketConnectionCPP(const void* target, size_t sz, size_t ni, void* cbc) {
+	bucketConnection bc = (bucketConnection)cbc;
 	size_t req_size = sz * ni;
-	bc->writeCon.write((const char *)target, req_size);
+	bc->writeCon.write((const char*)target, req_size);
 	StatusOr<gcs::ObjectMetadata> metadata = bc->writeCon.metadata();
 	if (!metadata) {
 		Rf_error(metadata.status().message().c_str());

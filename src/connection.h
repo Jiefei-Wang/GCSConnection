@@ -1,19 +1,10 @@
-#include <string>
-#include "google/cloud/storage/client.h"
+#include "Rinternals.h"
 
-namespace gcs = google::cloud::storage;
-typedef struct bucketCon* bucketConnection;
-
-struct bucketCon {
-	std::string credentials;
-	std::string projectName;
-	std::string bucketName;
-	std::string fileName;
-
-	gcs::Client* client = NULL;
-
-	gcs::ObjectReadStream readCon;
-	gcs::ObjectWriteStream writeCon;
-};
-
-
+extern "C" {
+	void* createBuckekConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEXP file);
+	void openBucketConnectionCPP(void* cbc);
+	void closeBucketConnectionCPP(void* cbc);
+	void destropBucketConnectionCPP(void* cbc);
+	size_t readBucketConnectionCPP(void* target, size_t sz, size_t ni, void* cbc);
+	size_t writeBucketConnectionCPP(const void* target, size_t sz, size_t ni, void* cbc);
+}
