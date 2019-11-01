@@ -1,5 +1,7 @@
 #include "connection.h"
+extern "C"{
 #include "R_ext/Connections.h"
+}
 #include <Rcpp.h>
 #include "macro.h"
 using namespace google::cloud;
@@ -17,14 +19,16 @@ struct bucketCon {
 };
 */
 
+static Rboolean bucket_open(Rconnection con);
+void bucket_close(Rconnection con);
+void bucket_destroy(Rconnection con);
+size_t bucket_read(void* target, size_t sz, size_t ni, Rconnection con);
+size_t bucket_write(const void* target, size_t sz, size_t ni, Rconnection con);
 
-
+// [[Rcpp::export]]
 SEXP getBucketConnection(SEXP credentials, SEXP project, SEXP bucket, SEXP file) {
 	Rconnection con;
 	SEXP rc = PROTECT(R_new_custom_connection(TOCHAR(file), "rw", "googleBucket", &con));
-
-
-
 
 	bucketConnection bc = new bucketCon;
 
@@ -52,7 +56,8 @@ SEXP getBucketConnection(SEXP credentials, SEXP project, SEXP bucket, SEXP file)
 	con->destroy = bucket_destroy;
 	con->read = bucket_read;
 	con->write = bucket_write;
-
+  UNPROTECT(1);
+  return rc;
 }
 
 

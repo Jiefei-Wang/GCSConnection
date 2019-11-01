@@ -45,12 +45,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// getBucketConnection
+SEXP getBucketConnection(SEXP credentials, SEXP project, SEXP bucket, SEXP file);
+RcppExport SEXP _googleCloudStorage_getBucketConnection(SEXP credentialsSEXP, SEXP projectSEXP, SEXP bucketSEXP, SEXP fileSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type credentials(credentialsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type project(projectSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type bucket(bucketSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type file(fileSEXP);
+    rcpp_result_gen = Rcpp::wrap(getBucketConnection(credentials, project, bucket, file));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_googleCloudStorage_C_set_credential", (DL_FUNC) &_googleCloudStorage_C_set_credential, 1},
     {"_googleCloudStorage_C_set_project", (DL_FUNC) &_googleCloudStorage_C_set_project, 1},
     {"_googleCloudStorage_C_get_bucket_number", (DL_FUNC) &_googleCloudStorage_C_get_bucket_number, 0},
     {"_googleCloudStorage_C_get_bucket_names", (DL_FUNC) &_googleCloudStorage_C_get_bucket_names, 0},
+    {"_googleCloudStorage_getBucketConnection", (DL_FUNC) &_googleCloudStorage_getBucketConnection, 4},
     {NULL, NULL, 0}
 };
 

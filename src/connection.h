@@ -16,10 +16,4 @@ struct bucketCon {
 	gcs::ObjectWriteStream writeCon;
 };
 
-static Rboolean bucket_open(Rconnection con);
-void bucket_close(Rconnection con);
-void bucket_destroy(Rconnection con);
-size_t bucket_read(void* target, size_t sz, size_t ni, Rconnection con);
-size_t bucket_write(const void* target, size_t sz, size_t ni, Rconnection con);
-
 
