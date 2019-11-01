@@ -5,18 +5,52 @@
 
 using namespace Rcpp;
 
-// test
-void test();
-RcppExport SEXP _googleCloudStorage_test() {
+// C_set_credential
+void C_set_credential(SEXP R_cred);
+RcppExport SEXP _googleCloudStorage_C_set_credential(SEXP R_credSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
-    test();
+    Rcpp::traits::input_parameter< SEXP >::type R_cred(R_credSEXP);
+    C_set_credential(R_cred);
     return R_NilValue;
+END_RCPP
+}
+// C_set_project
+void C_set_project(SEXP R_project_name);
+RcppExport SEXP _googleCloudStorage_C_set_project(SEXP R_project_nameSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type R_project_name(R_project_nameSEXP);
+    C_set_project(R_project_name);
+    return R_NilValue;
+END_RCPP
+}
+// C_get_bucket_number
+double C_get_bucket_number();
+RcppExport SEXP _googleCloudStorage_C_get_bucket_number() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(C_get_bucket_number());
+    return rcpp_result_gen;
+END_RCPP
+}
+// C_get_bucket_names
+std::vector<std::string> C_get_bucket_names();
+RcppExport SEXP _googleCloudStorage_C_get_bucket_names() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(C_get_bucket_names());
+    return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_googleCloudStorage_test", (DL_FUNC) &_googleCloudStorage_test, 0},
+    {"_googleCloudStorage_C_set_credential", (DL_FUNC) &_googleCloudStorage_C_set_credential, 1},
+    {"_googleCloudStorage_C_set_project", (DL_FUNC) &_googleCloudStorage_C_set_project, 1},
+    {"_googleCloudStorage_C_get_bucket_number", (DL_FUNC) &_googleCloudStorage_C_get_bucket_number, 0},
+    {"_googleCloudStorage_C_get_bucket_names", (DL_FUNC) &_googleCloudStorage_C_get_bucket_names, 0},
     {NULL, NULL, 0}
 };
 

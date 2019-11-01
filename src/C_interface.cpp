@@ -1,6 +1,8 @@
 #include <Rcpp.h>
 #include "cloud_api.h"
 #include "macro.h"
+#include <vector>
+#include <string>
 
 // [[Rcpp::export]]
 void C_set_credential(SEXP R_cred){
@@ -19,5 +21,19 @@ double C_get_bucket_number(){
   double num = getBucketNum();
   CHECK_ERROR(num);
   return(num);
+}
+
+// [[Rcpp::export]]
+std::vector<std::string> C_get_bucket_names(){
+  double num = getBucketNum();
+  CHECK_ERROR(num);
+  char * name = (char *)malloc(512*sizeof(char));
+  std::vector<std::string> v;
+  for(int i=0;i<num;i++){
+    getBucketName(i,name);
+    v.push_back(std::string(name));
+  }
+  free(name);
+  return(v);
 }
 
