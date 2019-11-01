@@ -3,6 +3,9 @@
 #include "macro.h"
 #include "connection.h"
 
+#define R_EOF -1
+
+
 static Rboolean bucket_open(Rconnection con);
 void bucket_close(Rconnection con);
 void bucket_destroy(Rconnection con);
@@ -30,6 +33,8 @@ SEXP getBucketConnection(SEXP credentials, SEXP project, SEXP bucket, SEXP file)
 	con->destroy = bucket_destroy;
 	con->read = bucket_read;
 	con->write = bucket_write;
+	con->fgetc = bucket_fgetc;
+	con->fgetc_internal = bucket_fgetc;
 	UNPROTECT(1);
 	return rc;
 }
@@ -75,4 +80,10 @@ size_t bucket_write(const void* target, size_t sz, size_t ni, Rconnection con) {
 	void* bc = con->private;
 	size_t req_size = writeBucketConnectionCPP(target, sz, ni, bc);
 	return req_size;
+}
+
+
+int bucket_fgetc(Rconnection con) {
+	int x;
+	return bucket_read(&x, 1, 1, con)? x: R_EOF;
 }
