@@ -49,7 +49,9 @@ void* createBuckekConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEX
 	if (!creds) {
 		Rf_error(creds.status().message().c_str());
 	}
-	bc->client = new gcs::Client(gcs::ClientOptions(*creds));
+	auto clientOptions = gcs::ClientOptions(*creds);
+	clientOptions.set_project_id(bc->projectName);
+	bc->client = new gcs::Client(clientOptions);
 	return bc;
 }
 
@@ -57,14 +59,14 @@ void* createBuckekConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEX
 void openBucketConnectionCPP(void* cbc) {
 	bucketConnection bc = (bucketConnection)cbc;
 	bc->readCon = bc->client->ReadObject(bc->bucketName.c_str(), bc->fileName.c_str());
-	bc->writeCon = bc->client->WriteObject(bc->bucketName.c_str(), bc->fileName.c_str());
+	//bc->writeCon = bc->client->WriteObject(bc->bucketName.c_str(), bc->fileName.c_str());
 }
 
 
 void closeBucketConnectionCPP(void* cbc) {
 	bucketConnection bc = (bucketConnection)cbc;
 	bc->readCon.Close();
-	bc->writeCon.Close();
+	//bc->writeCon.Close();
 }
 
 
@@ -74,24 +76,11 @@ void destropBucketConnectionCPP(void* cbc) {
 }
 
 
-
-size_t getStreamSize(gcs::ObjectReadStream& s) {
-	size_t off = s.tellg();
-	s.seekg(0, s.end);
-	size_t length = (size_t)s.tellg() - off;
-	s.seekg(off);
-	return length;
-}
-
-
 size_t readBucketConnectionCPP(void* target, size_t sz, size_t ni, void* cbc) {
 	bucketConnection bc = (bucketConnection)cbc;
-	size_t rest_len = getStreamSize(bc->readCon);
 	size_t req_size = sz * ni;
-	size_t read_size = rest_len > req_size ? req_size : rest_len;
-	std::istream& status = bc->readCon.read((char*)target, read_size);
-	bc->writeCon.seekp(bc->readCon.tellg());
-	
+	bc->readCon.read((char*)target, req_size);
+	size_t read_size = bc-> readCon.gcount();
 	return read_size;
 }
 

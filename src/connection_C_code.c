@@ -23,7 +23,7 @@ SEXP getBucketConnection(SEXP credentials, SEXP project, SEXP bucket, SEXP file)
 	con->incomplete = FALSE;
 	con->private = bc;
 	con->canseek = FALSE;
-	con->canwrite = TRUE;
+	con->canwrite = FALSE;
 	con->isopen = FALSE;
 	con->blocking = TRUE;
 	con->text = TRUE;
@@ -64,8 +64,9 @@ void bucket_close(Rconnection con) {
 void bucket_destroy(Rconnection con) {
 	void* bc = con->private;
 	destropBucketConnectionCPP(bc);
+	con->isopen = FALSE;
+	con->incomplete = FALSE;
 }
-
 
 
 size_t bucket_read(void* target, size_t sz, size_t ni, Rconnection con) {
