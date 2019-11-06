@@ -11,8 +11,7 @@ validateArgument <- function(fileName, bucket, text, UTF8){
     stop("The argument 'bucket' must be a string")
 }
 
-
-getReadConnection<-function(fileName, bucket = NULL, text = TRUE, UTF8 =FALSE){
+getInternalConnection <- function(fileName, bucket, text, UTF8, isRead){
   validateArgument(fileName, bucket, text, UTF8)
   if(is.null(bucket))
     bucket = getBucketName(errorWhenNotSet = TRUE)
@@ -21,10 +20,19 @@ getReadConnection<-function(fileName, bucket = NULL, text = TRUE, UTF8 =FALSE){
                          project = getProjectName(errorWhenNotSet = TRUE),
                          bucket = bucket,
                          file = fileName,
-                         canRead = TRUE, canWrite = FALSE,
+                         canRead = isRead, canWrite = !isRead,
                          text = text, UTF8 = UTF8
-                         )
+  )
 }
+
+
+getReadConnection<-function(fileName, bucket = NULL, text = TRUE, UTF8 =FALSE){
+  getInternalConnection(fileName, bucket, text, UTF8, isRead = TRUE)
+}
+getWriteConnection<-function(fileName, bucket = NULL, text = TRUE, UTF8 =FALSE){
+  getInternalConnection(fileName, bucket, text, UTF8, isRead = FALSE)
+}
+
 
 
 listBuckets<- function(){
