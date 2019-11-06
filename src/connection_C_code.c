@@ -15,19 +15,35 @@ int bucket_fgetc(Rconnection con);
 
 
 
-SEXP getBucketConnection(SEXP credentials, SEXP project, SEXP bucket, SEXP file) {
+SEXP getbucketConnection(SEXP R_credentials, SEXP R_project, SEXP R_bucket, SEXP R_file, SEXP R_canRead, SEXP R_canWrite, SEXP R_text, SEXP R_UTF8) {
+
+	char model[3];
+	bool canRead = asLogical(R_canRead);
+	bool canWrite = asLogical(R_canWrite);
+	if (canRead && canWrite) {
+		strcpy(model, "rw");
+	}
+	else if(canRead){
+		strcpy(model, "r");
+	}
+	else if (canWrite) {
+		strcpy(model, "w");
+	}
+
+
 	Rconnection con;
-	SEXP rc = PROTECT(R_new_custom_connection(TOCHAR(file), "rw", "googleBucket", &con));
-	void* bc = createBuckekConnectionCPP(credentials, project, bucket, file);
+	SEXP rc = PROTECT(R_new_custom_connection(TOCHAR(R_file), model, "googleBucket", &con));
+	void* bc = createBuckekConnectionCPP(TOCHAR(R_credentials), TOCHAR(R_project), TOCHAR(R_bucket), TOCHAR(R_file), canRead, canWrite);
 	
 	con->incomplete = FALSE;
 	con->private = bc;
 	con->canseek = FALSE;
-	con->canwrite = FALSE;
+	con->canread = canRead ? TRUE : FALSE;
+	con->canwrite = canWrite ?TRUE:FALSE;
 	con->isopen = FALSE;
 	con->blocking = TRUE;
-	con->text = TRUE;
-	con->UTF8out = TRUE;
+	con->text = asLogical(R_text)?TRUE:FALSE;
+	con->UTF8out = asLogical(R_UTF8) ? TRUE : FALSE;
 	con->open = bucket_open;
 	con->close = bucket_close;
 	con->destroy = bucket_destroy;
@@ -44,7 +60,7 @@ SEXP getBucketConnection(SEXP credentials, SEXP project, SEXP bucket, SEXP file)
 
 static Rboolean bucket_open(Rconnection con) {
 	void* bc = con->private;
-	openBucketConnectionCPP(bc);
+	openbucketConnectionCPP(bc);
 
 
 	con->isopen = TRUE;
@@ -54,32 +70,30 @@ static Rboolean bucket_open(Rconnection con) {
 
 void bucket_close(Rconnection con) {
 	void* bc = con->private;
-	closeBucketConnectionCPP(bc);
-	
-
+	closebucketConnectionCPP(bc);
 	con->isopen = FALSE;
 	con->incomplete = FALSE;
 }
 
 void bucket_destroy(Rconnection con) {
 	void* bc = con->private;
-	destropBucketConnectionCPP(bc);
+	destropbucketConnectionCPP(bc);
 	con->isopen = FALSE;
 	con->incomplete = FALSE;
 }
 
 
-size_t bucket_read(void* target, size_t sz, size_t ni, Rconnection con) {
+size_t bucket_read(void* target, size_t size, size_t nitems, Rconnection con) {
 	void* bc = con->private;
 	
-	size_t read_size = readBucketConnectionCPP(target, sz, ni, bc);
-	con->incomplete = read_size != sz*ni? TRUE : FALSE;
+	size_t read_size = readbucketConnectionCPP(target, size, nitems, bc);
+	con->incomplete = read_size != size * nitems ? TRUE : FALSE;
 	return read_size;
 }
 
-size_t bucket_write(const void* target, size_t sz, size_t ni, Rconnection con) {
+size_t bucket_write(const void* target, size_t size, size_t nitems, Rconnection con) {
 	void* bc = con->private;
-	size_t req_size = writeBucketConnectionCPP(target, sz, ni, bc);
+	size_t req_size = writebucketConnectionCPP(target, size, nitems, bc);
 	return req_size;
 }
 

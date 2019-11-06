@@ -2,9 +2,10 @@
 NULL
 
 
+
 .onLoad<-function(libname,pkgname){
   creds <- Sys.getenv("GOOGLE_APPLICATION_CREDENTIALS")
   if(creds!=""){
-    C_set_credential(creds)
+    credentialFile <- creds
   }
 }

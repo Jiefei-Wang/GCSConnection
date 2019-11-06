@@ -4,12 +4,12 @@ extern "C" {
 #else
 #include "Rinternals.h"
 #endif
-	void* createBuckekConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEXP file);
-	void openBucketConnectionCPP(void* cbc);
-	void closeBucketConnectionCPP(void* cbc);
-	void destropBucketConnectionCPP(void* cbc);
-	size_t readBucketConnectionCPP(void* target, size_t sz, size_t ni, void* cbc);
-	size_t writeBucketConnectionCPP(const void* target, size_t sz, size_t ni, void* cbc);
+	void* createBuckekConnectionCPP(const char* credentials, const char* project, const char* bucket, const char* file, bool canRead, bool canWrite);
+	void openbucketConnectionCPP(void* cbc);
+	void closebucketConnectionCPP(void* cbc);
+	void destropbucketConnectionCPP(void* cbc);
+	size_t readbucketConnectionCPP(void* target, size_t size, size_t nitems, void* cbc);
+	size_t writebucketConnectionCPP(const void* target, size_t size, size_t nitems, void* cbc);
 #ifdef __cplusplus
 }
 #endif
