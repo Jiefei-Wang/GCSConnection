@@ -7,7 +7,7 @@ cloudSettings <- list(
 
 
 getCredential<-function(errorWhenNotSet = FALSE){
-  name = cloudSettings$credential
+  name <- cloudSettings$credential
   if(errorWhenNotSet&&is.null(name)){
     stop("The credential file is not set, please call `setCredential` to set the credential")
   }
@@ -23,7 +23,7 @@ setCredential <- function(fileName){
 
 
 getProjectName <- function(errorWhenNotSet = FALSE){
-  name = cloudSettings$project
+  name <- cloudSettings$project
   if(errorWhenNotSet&&is.null(name)){
     stop("The project name is not set, please call `setProjectName` to set the project")
   }
@@ -38,8 +38,12 @@ setProjectName <- function(projectName){
 }
 
 
-getBucketName <- function(){
-  cloudSettings$bucket
+getBucketName <- function(errorWhenNotSet = FALSE){
+  name <- cloudSettings$bucket
+  if(errorWhenNotSet&&is.null(name)){
+    stop("The bucket name is not set, please call `setBucketName` to set the bucket name")
+  }
+  name
 }
 setBucketName <- function(bucketName){
   cloudSettings$bucket <- bucketName
@@ -47,7 +51,7 @@ setBucketName <- function(bucketName){
 
 initializeClientIfNot <- function(){
   if(!cloudSettings$initialized){
-    
+    initializeClient(getCredential(errorWhenNotSet = TRUE), getProjectName(errorWhenNotSet = TRUE))
   }
 }
 
