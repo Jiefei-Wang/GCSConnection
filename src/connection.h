@@ -3,8 +3,10 @@
 extern "C" {
 #else
 #include "Rinternals.h"
+#include <stdbool.h>
 #endif
-	void* createBuckekConnectionCPP(const char* credentials, const char* project, const char* bucket, const char* file, bool canRead, bool canWrite);
+	void* createBuckekConnectionCPP(const char* credentials, const char* project, const char* bucket, 
+                                 const char* file, bool canRead, bool canWrite);
 	void openbucketConnectionCPP(void* cbc);
 	void closebucketConnectionCPP(void* cbc);
 	void destropbucketConnectionCPP(void* cbc);

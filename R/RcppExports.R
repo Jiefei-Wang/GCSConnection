@@ -17,7 +17,7 @@ C_get_bucket_names <- function() {
     .Call(`_googleCloudStorage_C_get_bucket_names`)
 }
 
-getBucketConnectionCPP <- function(credentials, project, bucket, file) {
-    .Call(`_googleCloudStorage_getBucketConnectionCPP`, credentials, project, bucket, file)
+getbucketConnectionCPP <- function(credentials, project, bucket, file, canRead, canWrite, text, UTF8) {
+    .Call(`_googleCloudStorage_getbucketConnectionCPP`, credentials, project, bucket, file, canRead, canWrite, text, UTF8)
 }
 

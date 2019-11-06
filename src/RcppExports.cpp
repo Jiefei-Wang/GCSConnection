@@ -45,9 +45,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// getBucketConnectionCPP
-SEXP getBucketConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEXP file);
-RcppExport SEXP _googleCloudStorage_getBucketConnectionCPP(SEXP credentialsSEXP, SEXP projectSEXP, SEXP bucketSEXP, SEXP fileSEXP) {
+// getbucketConnectionCPP
+SEXP getbucketConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEXP file, SEXP canRead, SEXP canWrite, SEXP text, SEXP UTF8);
+RcppExport SEXP _googleCloudStorage_getbucketConnectionCPP(SEXP credentialsSEXP, SEXP projectSEXP, SEXP bucketSEXP, SEXP fileSEXP, SEXP canReadSEXP, SEXP canWriteSEXP, SEXP textSEXP, SEXP UTF8SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -55,7 +55,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type project(projectSEXP);
     Rcpp::traits::input_parameter< SEXP >::type bucket(bucketSEXP);
     Rcpp::traits::input_parameter< SEXP >::type file(fileSEXP);
-    rcpp_result_gen = Rcpp::wrap(getBucketConnectionCPP(credentials, project, bucket, file));
+    Rcpp::traits::input_parameter< SEXP >::type canRead(canReadSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type canWrite(canWriteSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type text(textSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type UTF8(UTF8SEXP);
+    rcpp_result_gen = Rcpp::wrap(getbucketConnectionCPP(credentials, project, bucket, file, canRead, canWrite, text, UTF8));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -65,7 +69,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_googleCloudStorage_C_set_project", (DL_FUNC) &_googleCloudStorage_C_set_project, 1},
     {"_googleCloudStorage_C_get_bucket_number", (DL_FUNC) &_googleCloudStorage_C_get_bucket_number, 0},
     {"_googleCloudStorage_C_get_bucket_names", (DL_FUNC) &_googleCloudStorage_C_get_bucket_names, 0},
-    {"_googleCloudStorage_getBucketConnectionCPP", (DL_FUNC) &_googleCloudStorage_getBucketConnectionCPP, 4},
+    {"_googleCloudStorage_getbucketConnectionCPP", (DL_FUNC) &_googleCloudStorage_getbucketConnectionCPP, 8},
     {NULL, NULL, 0}
 };
 

@@ -16,8 +16,8 @@ std::string* projectId = NULL;
 std::string lastError;
 
 int sendError(const std::string msg) {
-	lastError = msg;
-	return -1;
+  lastError = msg;
+  return -1;
 }
 
 
@@ -36,46 +36,46 @@ int setCredential(const char* cred){
 
 
 void setProject(const char * project) {
-	if (projectId != NULL) delete projectId;
-	projectId = new std::string(project);
+  if (projectId != NULL) delete projectId;
+  projectId = new std::string(project);
 };
 
 
 
 long long int getBucketNum() {
-	if(!isClientAvailable()) return sendError(ERROR_CLIENT_NOT_AVAILABLE);
-	auto bucket_list = client->ListBucketsForProject(*projectId);
-	return std::distance(bucket_list.begin(), bucket_list.end());
+  if(!isClientAvailable()) return sendError(ERROR_CLIENT_NOT_AVAILABLE);
+  auto bucket_list = client->ListBucketsForProject(*projectId);
+  return std::distance(bucket_list.begin(), bucket_list.end());
 }
 
 long long int getBucketNameSize(int index) {
-	if (!isClientAvailable()) return sendError(ERROR_CLIENT_NOT_AVAILABLE);
-	auto bucket_list = client->ListBucketsForProject(*projectId);
-	auto ith = std::next(bucket_list.begin(), index);
-
-	if (!(*ith)) {
-		return sendError((*ith).status().message());
-	}
-	return (*ith)->name().size();
+  if (!isClientAvailable()) return sendError(ERROR_CLIENT_NOT_AVAILABLE);
+  auto bucket_list = client->ListBucketsForProject(*projectId);
+  auto ith = std::next(bucket_list.begin(), index);
+  
+  if (!(*ith)) {
+    return sendError((*ith).status().message());
+  }
+  return (*ith)->name().size();
 }
 
 int getBucketName(int index, char* name) {
-	if (!isClientAvailable()) return sendError(ERROR_CLIENT_NOT_AVAILABLE);
-	auto bucket_list = client->ListBucketsForProject(*projectId);
-	auto ith = std::next(bucket_list.begin(), index);
-	if (!(*ith)) {
-		return sendError((*ith).status().message());
-	}
-	strcpy(name,(*ith)->name().c_str());
-	return 0;
+  if (!isClientAvailable()) return sendError(ERROR_CLIENT_NOT_AVAILABLE);
+  auto bucket_list = client->ListBucketsForProject(*projectId);
+  auto ith = std::next(bucket_list.begin(), index);
+  if (!(*ith)) {
+    return sendError((*ith).status().message());
+  }
+  strcpy(name,(*ith)->name().c_str());
+  return 0;
 }
 
 
 
 bool isClientAvailable() {
-	return client != NULL;
+  return client != NULL;
 }
 
 const char* getLastError() {
-	return lastError.c_str();
+  return lastError.c_str();
 }
