@@ -1,9 +1,6 @@
-cloudSettings <- list(
-  credential = NULL,
-  project = NULL,
-  bucket = NULL,
-  initialized = FALSE
-)
+cloudSettings <- new.env()
+cloudSettings$initialized <- FALSE
+
 
 
 getCredential<-function(errorWhenNotSet = FALSE){
@@ -17,7 +14,6 @@ setCredential <- function(fileName){
   if(!is.null(getCredential())&&getCredential()==fileName)
     return()
   cloudSettings$credential <- fileName
-  C_set_credential(fileName)
   cloudSettings$initialized = FALSE
 }
 
@@ -33,7 +29,6 @@ setProjectName <- function(projectName){
   if(!is.null(getProjectName())&&getProjectName()==fileName)
     return()
   cloudSettings$project <- projectName
-  C_set_project(projectName);
   cloudSettings$initialized = FALSE
 }
 
