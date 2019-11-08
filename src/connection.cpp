@@ -58,8 +58,13 @@ void closebucketConnectionCPP(void* cbc) {
 	bucketConnection bc = (bucketConnection)cbc;
 	if (bc->canRead)
 		bc->readCon.Close();
-	if (bc->canWrite)
+	if (bc->canWrite){
 		bc->writeCon.Close();
+	StatusOr<gcs::ObjectMetadata> metadata = bc->writeCon.metadata();
+	if (!metadata) {
+	  Rf_warning("Error in the write connection: ",metadata.status().message().c_str());
+	}
+	}
 }
 
 
@@ -81,9 +86,5 @@ size_t writebucketConnectionCPP(const void* target, size_t size, size_t nitems, 
 	bucketConnection bc = (bucketConnection)cbc;
 	size_t req_size = size * nitems;
 	bc->writeCon.write((const char*)target, req_size);
-	StatusOr<gcs::ObjectMetadata> metadata = bc->writeCon.metadata();
-	if (!metadata) {
-		Rf_error(metadata.status().message().c_str());
-	}
 	return req_size;
 }

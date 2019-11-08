@@ -22,15 +22,19 @@ SEXP getbucketConnection(SEXP R_credentials, SEXP R_project, SEXP R_bucket, SEXP
 	char model[3];
 	bool canRead = asLogical(R_canRead);
 	bool canWrite = asLogical(R_canWrite);
-	if (canRead && canWrite) {
-		strcpy(model, "rw");
-	}
-	else if(canRead){
+	if(canRead){
 		strcpy(model, "r");
 	}
 	else if (canWrite) {
 		strcpy(model, "w");
+	}else{
+	  Rf_error("Unknow options");
 	}
+	
+	if(!asLogical(R_text)){
+	  strcpy(model+1, "b");
+	}
+	
 
 
 	Rconnection con;

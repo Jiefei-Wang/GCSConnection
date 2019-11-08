@@ -46,7 +46,7 @@ setBucketName <- function(bucketName){
 
 initializeClientIfNot <- function(){
   if(!cloudSettings$initialized){
-    initializeClient(getCredential(errorWhenNotSet = TRUE), getProjectName(errorWhenNotSet = TRUE))
+    C_initializeClient(getCredential(errorWhenNotSet = TRUE), getProjectName(errorWhenNotSet = TRUE))
   }
 }
 

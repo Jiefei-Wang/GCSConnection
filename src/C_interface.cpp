@@ -9,7 +9,8 @@ using namespace google::cloud;
 
 gcs::Client* client;
 
-void initializeClient(SEXP R_credential_name,SEXP R_project_name){
+// [[Rcpp::export]]
+void C_initializeClient(SEXP R_credential_name,SEXP R_project_name){
   std::string credential_name=CHAR(Rf_asChar(R_credential_name));
   std::string project=CHAR(Rf_asChar(R_project_name));
   auto creds =
@@ -23,15 +24,12 @@ void initializeClient(SEXP R_credential_name,SEXP R_project_name){
 // [[Rcpp::export]]
 std::vector<std::string> C_get_bucket_names(){
   gcs::ListBucketsReader bucket_list = client->ListBuckets();
-  size_t bucket_num = std::distance(bucket_list.begin(), bucket_list.end());
-  std::vector<std::string> bucket_names(bucket_num);
-  size_t count = 0;
-  for (auto&& bucket_metadata : bucket_list) {
-    if (!bucket_metadata) {
-      Rf_error(bucket_metadata.status().message().c_str());
+  std::vector<std::string> bucket_names;
+  for (auto&& bucket_meta:bucket_list) {
+    if (!bucket_meta) {
+      Rf_error(bucket_meta.status().message().c_str());
     }
-    bucket_names[count] =bucket_metadata->name();
-    count++;
+    bucket_names.push_back(bucket_meta->name());
   }
   return bucket_names;
 }
@@ -41,15 +39,12 @@ std::vector<std::string> C_get_file_names(SEXP bucket){
   std::string bucket_name = CHAR(Rf_asChar(bucket));
   gcs::ListObjectsReader file_list = client->ListObjects(bucket_name);
   
-  size_t file_num = std::distance(file_list.begin(), file_list.end());
-  std::vector<std::string> file_names(file_num);
-  size_t count = 0;
+  std::vector<std::string> file_names;
   for (auto&& object_metadata : file_list) {
     if (!object_metadata) {
       Rf_error(object_metadata.status().message().c_str());
     }
-    file_names[count] =object_metadata->name();
-    count++;
+    file_names.push_back(object_metadata->name());
   }
   return file_names;
 }

@@ -45,6 +45,7 @@ listFilesForBucket <- function(bucket = NULL){
   if(is.null(bucket))
     bucket = getBucketName(errorWhenNotSet = TRUE)
   fileList = C_get_file_names(bucket)
+  fileList
 }
 
 
