@@ -49,16 +49,17 @@ void* createBuckekConnectionCPP(const char* credentials, const char* project, co
 }
 
 
-void openbucketConnectionCPP(void* cbc) {
+bool openbucketConnectionCPP(void* cbc) {
 	bucketConnection bc = (bucketConnection)cbc;
 	if (bc->canRead)
 		bc->readCon = bc->client->ReadObject(bc->bucketName.c_str(), bc->fileName.c_str());
 	if (bc->canWrite)
 		bc->writeCon = bc->client->WriteObject(bc->bucketName.c_str(), bc->fileName.c_str());
+	return true;
 }
 
 
-void closebucketConnectionCPP(void* cbc) {
+bool closebucketConnectionCPP(void* cbc) {
 	bucketConnection bc = (bucketConnection)cbc;
 	if (bc->canRead)
 		bc->readCon.Close();
@@ -69,12 +70,14 @@ void closebucketConnectionCPP(void* cbc) {
 	  Rf_warning("Error in the write connection: ",metadata.status().message().c_str());
 	}
 	}
+	return true;
 }
 
 
 void destropbucketConnectionCPP(void* cbc) {
 	bucketConnection bc = (bucketConnection)cbc;
-	delete bc->client;
+  if(bc->client!=NULL)
+	  delete bc->client;
 }
 
 

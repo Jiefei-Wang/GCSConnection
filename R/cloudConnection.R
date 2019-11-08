@@ -11,7 +11,7 @@ validateArgument <- function(fileName, bucket, text, UTF8){
     stop("The argument 'bucket' must be a string")
 }
 
-getInternalConnection <- function(fileName, bucket, text, UTF8, isRead){
+getInternalConnection <- function(fileName, bucket, text, UTF8, isRead, open){
   validateArgument(fileName, bucket, text, UTF8)
   if(is.null(bucket))
     bucket = getBucketName(errorWhenNotSet = TRUE)

@@ -7,8 +7,8 @@ extern "C" {
 #endif
 	void* createBuckekConnectionCPP(const char* credentials, const char* project, const char* bucket, 
                                  const char* file, bool canRead, bool canWrite);
-	void openbucketConnectionCPP(void* cbc);
-	void closebucketConnectionCPP(void* cbc);
+	bool openbucketConnectionCPP(void* cbc);
+	bool closebucketConnectionCPP(void* cbc);
 	void destropbucketConnectionCPP(void* cbc);
 	size_t readbucketConnectionCPP(void* target, size_t size, size_t nitems, void* cbc);
 	size_t writebucketConnectionCPP(const void* target, size_t size, size_t nitems, void* cbc);
