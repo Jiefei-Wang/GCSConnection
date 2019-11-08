@@ -38,8 +38,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // getbucketConnectionCPP
-SEXP getbucketConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEXP file, SEXP canRead, SEXP canWrite, SEXP text, SEXP UTF8);
-RcppExport SEXP _googleCloudStorage_getbucketConnectionCPP(SEXP credentialsSEXP, SEXP projectSEXP, SEXP bucketSEXP, SEXP fileSEXP, SEXP canReadSEXP, SEXP canWriteSEXP, SEXP textSEXP, SEXP UTF8SEXP) {
+SEXP getbucketConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEXP file, SEXP canRead, SEXP canWrite, SEXP text, SEXP UTF8, SEXP open);
+RcppExport SEXP _googleCloudStorage_getbucketConnectionCPP(SEXP credentialsSEXP, SEXP projectSEXP, SEXP bucketSEXP, SEXP fileSEXP, SEXP canReadSEXP, SEXP canWriteSEXP, SEXP textSEXP, SEXP UTF8SEXP, SEXP openSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -51,7 +51,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type canWrite(canWriteSEXP);
     Rcpp::traits::input_parameter< SEXP >::type text(textSEXP);
     Rcpp::traits::input_parameter< SEXP >::type UTF8(UTF8SEXP);
-    rcpp_result_gen = Rcpp::wrap(getbucketConnectionCPP(credentials, project, bucket, file, canRead, canWrite, text, UTF8));
+    Rcpp::traits::input_parameter< SEXP >::type open(openSEXP);
+    rcpp_result_gen = Rcpp::wrap(getbucketConnectionCPP(credentials, project, bucket, file, canRead, canWrite, text, UTF8, open));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -60,7 +61,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_googleCloudStorage_C_initializeClient", (DL_FUNC) &_googleCloudStorage_C_initializeClient, 2},
     {"_googleCloudStorage_C_get_bucket_names", (DL_FUNC) &_googleCloudStorage_C_get_bucket_names, 0},
     {"_googleCloudStorage_C_get_file_names", (DL_FUNC) &_googleCloudStorage_C_get_file_names, 1},
-    {"_googleCloudStorage_getbucketConnectionCPP", (DL_FUNC) &_googleCloudStorage_getbucketConnectionCPP, 8},
+    {"_googleCloudStorage_getbucketConnectionCPP", (DL_FUNC) &_googleCloudStorage_getbucketConnectionCPP, 9},
     {NULL, NULL, 0}
 };
 

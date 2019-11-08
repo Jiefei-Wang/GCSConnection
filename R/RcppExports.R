@@ -13,7 +13,7 @@ C_get_file_names <- function(bucket) {
     .Call(`_googleCloudStorage_C_get_file_names`, bucket)
 }
 
-getbucketConnectionCPP <- function(credentials, project, bucket, file, canRead, canWrite, text, UTF8) {
-    .Call(`_googleCloudStorage_getbucketConnectionCPP`, credentials, project, bucket, file, canRead, canWrite, text, UTF8)
+getbucketConnectionCPP <- function(credentials, project, bucket, file, canRead, canWrite, text, UTF8, open) {
+    .Call(`_googleCloudStorage_getbucketConnectionCPP`, credentials, project, bucket, file, canRead, canWrite, text, UTF8, open)
 }
 

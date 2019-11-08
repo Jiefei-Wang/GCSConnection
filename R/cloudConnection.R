@@ -27,26 +27,26 @@ getInternalConnection <- function(fileName, bucket, text, UTF8, isRead, open){
 
 
 getBucketConnection <- function(fileName, bucket = NULL, 
-                                open = "r", UTF8 =FALSE){
-  open <- TRUE
-  if(open%in%c("r","rt")){
+                                mode = "r", UTF8 =FALSE){
+  autoOpen <- TRUE
+  if(mode%in%c("r","rt")){
     return(getInternalConnection(fileName, bucket, text = TRUE , UTF8 = UTF8, 
-                          isRead = TRUE , open= open))
+                          isRead = TRUE , open = autoOpen))
   }
-  if(open%in%c("w","wt")){
+  if(mode%in%c("w","wt")){
     return(getInternalConnection(fileName, bucket, text = TRUE , UTF8 = UTF8, 
-                          isRead = FALSE , open= open))
+                          isRead = FALSE , open= autoOpen))
   }
-  if(open%in%c("rb")){
+  if(mode%in%c("rb")){
     return(getInternalConnection(fileName, bucket, text = FALSE , UTF8 = FALSE, 
-                          isRead = TRUE , open= open))
+                          isRead = TRUE , open= autoOpen))
   }
-  if(open%in%c("wb")){
+  if(mode%in%c("wb")){
     return(getInternalConnection(fileName, bucket, text = FALSE , UTF8 = FALSE, 
-                          isRead = FALSE , open= open))
+                          isRead = FALSE , open= autoOpen))
   }
   
-  stop("unsupported open option")
+  stop("unsupported mode option")
 }
 
 
