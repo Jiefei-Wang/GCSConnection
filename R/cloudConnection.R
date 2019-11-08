@@ -21,16 +21,32 @@ getInternalConnection <- function(fileName, bucket, text, UTF8, isRead, open){
                          bucket = bucket,
                          file = fileName,
                          canRead = isRead, canWrite = !isRead,
-                         text = text, UTF8 = UTF8
+                         text = text, UTF8 = UTF8, open=open
   )
 }
 
 
-getReadConnection<-function(fileName, bucket = NULL, text = TRUE, UTF8 =FALSE){
-  getInternalConnection(fileName, bucket, text, UTF8, isRead = TRUE)
-}
-getWriteConnection<-function(fileName, bucket = NULL, text = TRUE, UTF8 =FALSE){
-  getInternalConnection(fileName, bucket, text, UTF8, isRead = FALSE)
+getBucketConnection <- function(fileName, bucket = NULL, 
+                                open = "r", UTF8 =FALSE){
+  open <- TRUE
+  if(open%in%c("r","rt")){
+    return(getInternalConnection(fileName, bucket, text = TRUE , UTF8 = UTF8, 
+                          isRead = TRUE , open= open))
+  }
+  if(open%in%c("w","wt")){
+    return(getInternalConnection(fileName, bucket, text = TRUE , UTF8 = UTF8, 
+                          isRead = FALSE , open= open))
+  }
+  if(open%in%c("rb")){
+    return(getInternalConnection(fileName, bucket, text = FALSE , UTF8 = FALSE, 
+                          isRead = TRUE , open= open))
+  }
+  if(open%in%c("wb")){
+    return(getInternalConnection(fileName, bucket, text = FALSE , UTF8 = FALSE, 
+                          isRead = FALSE , open= open))
+  }
+  
+  stop("unsupported open option")
 }
 
 
