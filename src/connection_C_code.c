@@ -10,7 +10,7 @@
 
 
 static Rboolean bucket_open(Rconnection con) {
-  Rprintf("file open\n");
+  //Rprintf("file open\n");
 	void* bc = con->private;
 	bool success = openbucketConnectionCPP(bc);
   if(success){
@@ -21,7 +21,7 @@ static Rboolean bucket_open(Rconnection con) {
 }
 
 void bucket_close(Rconnection con) {
-  Rprintf("file close\n");
+  //Rprintf("file close\n");
 	void* bc = con->private;
 	bool success = closebucketConnectionCPP(bc);
 	if(success){
@@ -68,7 +68,8 @@ double seekbucketConnection(Rconnection con, double where, int origin, int rw) {
 
 
 
-SEXP getbucketConnection(SEXP R_credentials, SEXP R_project, SEXP R_bucket, SEXP R_file, SEXP R_canRead, 
+SEXP getbucketConnection(SEXP R_credentials, SEXP R_project, SEXP R_bucket, SEXP R_file,
+                         SEXP R_canRead, 
                          SEXP R_canWrite, SEXP R_text, SEXP R_UTF8, SEXP open) {
 
 	char model[3];

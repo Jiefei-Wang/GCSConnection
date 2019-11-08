@@ -19,6 +19,7 @@ struct bucketCon {
 	std::string bucketName;
 	std::string fileName;
 	gcs::Client* client = NULL;
+	size_t fileSize;
 	size_t offset;
 	bool canRead;
 	bool canWrite;
@@ -45,6 +46,12 @@ void* createBuckekConnectionCPP(const char* credentials, const char* project, co
 	bc->offset = 0;
 	bc->canRead = canRead;
 	bc->canWrite = canWrite;
+	auto fileMeta = bc->client->GetObjectMetadata(bucket,file);
+	if(!fileMeta){
+	  bc->fileSize = 0;
+	}
+	bc->fileSize = fileMeta->size();
+	
 	return bc;
 }
 
@@ -64,11 +71,11 @@ bool closebucketConnectionCPP(void* cbc) {
 	if (bc->canRead)
 		bc->readCon.Close();
 	if (bc->canWrite){
-		bc->writeCon.Close();
-	StatusOr<gcs::ObjectMetadata> metadata = bc->writeCon.metadata();
-	if (!metadata) {
-	  Rf_warning("Error in the write connection: ",metadata.status().message().c_str());
-	}
+	  bc->writeCon.Close();
+	  StatusOr<gcs::ObjectMetadata> metadata = bc->writeCon.metadata();
+	  if (!metadata) {
+	    Rf_warning("Error in the write connection: ",metadata.status().message().c_str());
+	  }
 	}
 	return true;
 }
@@ -82,6 +89,7 @@ void destropbucketConnectionCPP(void* cbc) {
 
 
 size_t readbucketConnectionCPP(void* target, size_t size, size_t nitems, void* cbc) {
+  //Rprintf("reading %lld bytes",size*nitems);
 	bucketConnection bc = (bucketConnection)cbc;
 	size_t req_size = size * nitems;
 	bc->readCon.read((char*)target, req_size);
@@ -94,11 +102,6 @@ size_t writebucketConnectionCPP(const void* target, size_t size, size_t nitems, 
 	bucketConnection bc = (bucketConnection)cbc;
 	size_t req_size = size * nitems;
 	bc->writeCon.write((const char*)target, req_size);
-	StatusOr<gcs::ObjectMetadata> metadata = bc->writeCon.metadata();
-	if (!metadata) {
-		Rf_error(metadata.status().message().c_str());
-	}
-
 	bc->offset = bc->offset + req_size;
 	return req_size;
 }
@@ -109,28 +112,27 @@ double seekbucketConnectionCPP(double where, int origin, void* cbc) {
 	if (ISNA(where)) {
 		return bc->offset;
 	}
-
-	size_t newOffset;
+	
+  size_t oldOffset = bc->offset;
 	if (origin == 1) {
 		//start
-		newOffset = where;
+		bc->offset = where;
 	}
 	else if (origin == 2) {
 		// current
-		newOffset = bc->offset + where;
+		bc->offset = bc->offset + where;
 	}
 	else {
 		// end
 		//TODO: implement length
-		newOffset = 0;
+		bc->offset = bc->fileSize + where;
 	}
 
-	if (bc->offset != newOffset && bc->readCon.IsOpen()) {
+	if (bc->offset != oldOffset) {
 		bc->readCon.Close();
-		bc->offset = newOffset;
 	}
 	if (!bc->readCon.IsOpen()) {
-		bc->readCon = bc->client->ReadObject(bc->bucketName.c_str(), bc->fileName.c_str(), gcs::ReadRange(bc->offset, ULLONG_MAX));
+		bc->readCon = bc->client->ReadObject(bc->bucketName.c_str(), bc->fileName.c_str(), gcs::ReadRange(bc->offset, LLONG_MAX));
 	}
-	return bc->offset;
+	return oldOffset;
 }
