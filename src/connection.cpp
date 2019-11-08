@@ -1,13 +1,17 @@
 #include "connection.h"
 #include "google/cloud/storage/client.h"
 #include "macro.h"
+#include <string>
+//#define size_t unsigned long long int
+
+
 using namespace google::cloud;
 
-#include "connection.h"
-#include <string>
+
 
 namespace gcs = google::cloud::storage;
 typedef struct bucketCon* bucketConnection;
+
 
 struct bucketCon {
 	std::string credentials;
@@ -38,7 +42,7 @@ void* createBuckekConnectionCPP(const char* credentials, const char* project, co
 	auto clientOptions = gcs::ClientOptions(*creds);
 	clientOptions.set_project_id(bc->projectName);
 	bc->client = new gcs::Client(clientOptions);
-	bc->offset;
+	bc->offset = 0;
 	bc->canRead = canRead;
 	bc->canWrite = canWrite;
 	return bc;
@@ -47,7 +51,7 @@ void* createBuckekConnectionCPP(const char* credentials, const char* project, co
 
 void openbucketConnectionCPP(void* cbc) {
 	bucketConnection bc = (bucketConnection)cbc;
-	if(bc->canRead)
+	if (bc->canRead)
 		bc->readCon = bc->client->ReadObject(bc->bucketName.c_str(), bc->fileName.c_str());
 	if (bc->canWrite)
 		bc->writeCon = bc->client->WriteObject(bc->bucketName.c_str(), bc->fileName.c_str());
@@ -73,7 +77,8 @@ size_t readbucketConnectionCPP(void* target, size_t size, size_t nitems, void* c
 	bucketConnection bc = (bucketConnection)cbc;
 	size_t req_size = size * nitems;
 	bc->readCon.read((char*)target, req_size);
-	size_t read_size = bc-> readCon.gcount();
+	size_t read_size = bc->readCon.gcount();
+	bc->offset = bc->offset + read_size;
 	return read_size;
 }
 
@@ -85,5 +90,39 @@ size_t writebucketConnectionCPP(const void* target, size_t size, size_t nitems, 
 	if (!metadata) {
 		Rf_error(metadata.status().message().c_str());
 	}
+
+	bc->offset = bc->offset + req_size;
 	return req_size;
+}
+
+
+double seekbucketConnectionCPP(double where, int origin, void* cbc) {
+	bucketConnection bc = (bucketConnection)cbc;
+	if (ISNA(where)) {
+		return bc->offset;
+	}
+
+	size_t newOffset;
+	if (origin == 1) {
+		//start
+		newOffset = where;
+	}
+	else if (origin == 2) {
+		// current
+		newOffset = bc->offset + where;
+	}
+	else {
+		// end
+		//TODO: implement length
+		newOffset = 0;
+	}
+
+	if (bc->offset != newOffset && bc->readCon.IsOpen()) {
+		bc->readCon.Close();
+		bc->offset = newOffset;
+	}
+	if (!bc->readCon.IsOpen()) {
+		bc->readCon = bc->client->ReadObject(bc->bucketName.c_str(), bc->fileName.c_str(), gcs::ReadRange(bc->offset, ULLONG_MAX));
+	}
+	return bc->offset;
 }

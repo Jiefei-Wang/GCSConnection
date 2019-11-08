@@ -12,6 +12,7 @@ extern "C" {
 	void destropbucketConnectionCPP(void* cbc);
 	size_t readbucketConnectionCPP(void* target, size_t size, size_t nitems, void* cbc);
 	size_t writebucketConnectionCPP(const void* target, size_t size, size_t nitems, void* cbc);
+	double seekbucketConnectionCPP(double where, int origin, void* cbc);
 #ifdef __cplusplus
 }
 #endif
