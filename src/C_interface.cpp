@@ -51,14 +51,3 @@ std::vector<std::string> C_get_file_names(SEXP bucket){
 
 
 
-
-extern "C" SEXP getbucketConnection(SEXP credentials, SEXP project, SEXP bucket, 
-                                   SEXP file, SEXP canRead, SEXP canWrite, SEXP text, SEXP UTF8,
-                                   SEXP open);
-
-// [[Rcpp::export]]
-SEXP getbucketConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEXP file,SEXP canRead, SEXP canWrite, SEXP text, 
-                            SEXP UTF8, SEXP open){
-  return getbucketConnection(credentials,project, bucket,file, canRead, canWrite, text,UTF8,open);
-}
-
