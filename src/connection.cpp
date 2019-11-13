@@ -1,4 +1,4 @@
-#include "connection.h"
+#include <Rcpp.h>
 #include "google/cloud/storage/client.h"
 #include "macro.h"
 #include <string>
@@ -8,10 +8,14 @@
 #undef class
 #undef private
 
-#define R_EOF -1
+
 using namespace google::cloud;
+using std::string;
+
 namespace gcs = google::cloud::storage;
+
 typedef struct bucketCon* bucketConnection;
+#define R_EOF -1
 
 
 struct bucketCon {
@@ -127,13 +131,13 @@ double seekbucketConnection(Rconnection con, double where, int origin, int rw) {
 
 
 // [[Rcpp::export]]
-SEXP getbucketConnection(SEXP R_credentials, SEXP R_project, SEXP R_bucket, SEXP R_file,
+SEXP getbucketConnection(std::string R_credentials, SEXP R_project, SEXP R_bucket, SEXP R_file,
 	SEXP R_canRead,
 	SEXP R_canWrite, SEXP R_text, SEXP R_UTF8, SEXP open) {
 
 	char model[3];
-	bool canRead = asLogical(R_canRead);
-	bool canWrite = asLogical(R_canWrite);
+	bool canRead = Rf_asLogical(R_canRead);
+	bool canWrite = Rf_asLogical(R_canWrite);
 	if (canRead && canWrite) {
 		strcpy(model, "rw");
 	}
@@ -153,7 +157,7 @@ SEXP getbucketConnection(SEXP R_credentials, SEXP R_project, SEXP R_bucket, SEXP
 	bc->projectName = TOCHAR(R_project);
 	bc->bucketName = TOCHAR(R_bucket);
 	bc->fileName = TOCHAR(R_file);
-	bc->credentials = TOCHAR(R_credentials);
+	bc->credentials = R_credentials.c_str();
 	auto creds = gcs::oauth2::CreateServiceAccountCredentialsFromJsonFilePath(bc->credentials);
 	if (!creds) {
 		Rf_error(creds.status().message().c_str());
@@ -175,14 +179,14 @@ SEXP getbucketConnection(SEXP R_credentials, SEXP R_project, SEXP R_bucket, SEXP
 
 
 	con->incomplete = FALSE;
-	con->private = bc;
+	con->myprivate = bc;
 	con->canseek = canRead ? TRUE : FALSE;
 	con->canread = canRead ? TRUE : FALSE;
 	con->canwrite = canWrite ? TRUE : FALSE;
 	con->isopen = FALSE;
 	con->blocking = TRUE;
-	con->text = asLogical(R_text) ? TRUE : FALSE;
-	con->UTF8out = asLogical(R_UTF8) ? TRUE : FALSE;
+	con->text = Rf_asLogical(R_text) ? TRUE : FALSE;
+	con->UTF8out = Rf_asLogical(R_UTF8) ? TRUE : FALSE;
 	con->open = bucket_open;
 	con->close = bucket_close;
 	con->destroy = bucket_destroy;
@@ -191,7 +195,7 @@ SEXP getbucketConnection(SEXP R_credentials, SEXP R_project, SEXP R_bucket, SEXP
 	con->fgetc = bucket_fgetc;
 	con->fgetc_internal = bucket_fgetc;
 	con->seek = seekbucketConnection;
-	if (asLogical(open)) {
+	if (Rf_asLogical(open)) {
 		Rboolean success = con->open(con);
 		if (!success) {
 			con->destroy(con);

@@ -37,22 +37,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// getbucketConnectionCPP
-SEXP getbucketConnectionCPP(SEXP credentials, SEXP project, SEXP bucket, SEXP file, SEXP canRead, SEXP canWrite, SEXP text, SEXP UTF8, SEXP open);
-RcppExport SEXP _googleCloudStorage_getbucketConnectionCPP(SEXP credentialsSEXP, SEXP projectSEXP, SEXP bucketSEXP, SEXP fileSEXP, SEXP canReadSEXP, SEXP canWriteSEXP, SEXP textSEXP, SEXP UTF8SEXP, SEXP openSEXP) {
+// getbucketConnection
+SEXP getbucketConnection(std::string R_credentials, SEXP R_project, SEXP R_bucket, SEXP R_file, SEXP R_canRead, SEXP R_canWrite, SEXP R_text, SEXP R_UTF8, SEXP open);
+RcppExport SEXP _googleCloudStorage_getbucketConnection(SEXP R_credentialsSEXP, SEXP R_projectSEXP, SEXP R_bucketSEXP, SEXP R_fileSEXP, SEXP R_canReadSEXP, SEXP R_canWriteSEXP, SEXP R_textSEXP, SEXP R_UTF8SEXP, SEXP openSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type credentials(credentialsSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type project(projectSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type bucket(bucketSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type file(fileSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type canRead(canReadSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type canWrite(canWriteSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type text(textSEXP);
-    Rcpp::traits::input_parameter< SEXP >::type UTF8(UTF8SEXP);
+    Rcpp::traits::input_parameter< std::string >::type R_credentials(R_credentialsSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type R_project(R_projectSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type R_bucket(R_bucketSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type R_file(R_fileSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type R_canRead(R_canReadSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type R_canWrite(R_canWriteSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type R_text(R_textSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type R_UTF8(R_UTF8SEXP);
     Rcpp::traits::input_parameter< SEXP >::type open(openSEXP);
-    rcpp_result_gen = Rcpp::wrap(getbucketConnectionCPP(credentials, project, bucket, file, canRead, canWrite, text, UTF8, open));
+    rcpp_result_gen = Rcpp::wrap(getbucketConnection(R_credentials, R_project, R_bucket, R_file, R_canRead, R_canWrite, R_text, R_UTF8, open));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -61,7 +61,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_googleCloudStorage_C_initializeClient", (DL_FUNC) &_googleCloudStorage_C_initializeClient, 2},
     {"_googleCloudStorage_C_get_bucket_names", (DL_FUNC) &_googleCloudStorage_C_get_bucket_names, 0},
     {"_googleCloudStorage_C_get_file_names", (DL_FUNC) &_googleCloudStorage_C_get_file_names, 1},
-    {"_googleCloudStorage_getbucketConnectionCPP", (DL_FUNC) &_googleCloudStorage_getbucketConnectionCPP, 9},
+    {"_googleCloudStorage_getbucketConnection", (DL_FUNC) &_googleCloudStorage_getbucketConnection, 9},
     {NULL, NULL, 0}
 };
 
