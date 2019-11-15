@@ -4,14 +4,12 @@ gcs_connection <-function(description, open,
            project = getProjectName(),
            bucket = getBucketName()){
   stopifnot(
-    is_scalar_character(credential),
+    is_scalar_character(credentials),
     is_scalar_character(project),
     is_scalar_character(bucket),
     is_scalar_character(description),
-    is_scalar_logical(isRead),
-    is_scalar_logical(isText),
-    is_scalar_logical(encoding),
-    is.character(open)
+    is_scalar_character(open),
+    is_scalar_character(encoding)
   )
   
   UTF8 = identical(encoding, "UTF8")
@@ -33,7 +31,7 @@ gcs_connection <-function(description, open,
     isRead = FALSE
     isText = FALSE
   }
-  getbucketConnectionCPP(credentials = credential,
+  getbucketConnection(credentials = credentials,
                          project = project,
                          bucket = bucket,
                          file = description,

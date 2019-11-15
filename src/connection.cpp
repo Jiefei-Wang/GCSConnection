@@ -145,7 +145,7 @@ double seekConnection(Rconnection con, double where, int origin, int rw) {
 
 
 // [[Rcpp::export]]
-SEXP getbucketConnection(string credentials, string project, string bucket, string file,
+SEXP getbucketConnection(std::string credentials, std::string project, std::string bucket, std::string file,
 	bool isRead, bool istext, bool UTF8, bool autoOpen) {
 	string openMode;
 	if (isRead && istext) {
