@@ -1,53 +1,49 @@
-validateArgument <- function(fileName, bucket, text, UTF8){
-  if(!is.character(fileName))
-    stop("The argument 'fileName' must be a string")
-  if(length(fileName)!=1)
-    stop("You can only specify one file name in the argument 'fileName'")
-  if(!is.logical(text))
-    stop("The argument 'text' must be a logical value")
-  if(!is.logical(UTF8))
-    stop("The argument 'UTF8' must be a logical value")
-  if(!is.null(bucket)&&!is.character(bucket))
-    stop("The argument 'bucket' must be a string")
-}
-
-getInternalConnection <- function(fileName, bucket, text, UTF8, isRead, open){
-  validateArgument(fileName, bucket, text, UTF8)
-  if(is.null(bucket))
-    bucket = getBucketName(errorWhenNotSet = TRUE)
-  
-  getbucketConnectionCPP(credentials = getCredential(errorWhenNotSet = TRUE),
-                         project = getProjectName(errorWhenNotSet = TRUE),
-                         bucket = bucket,
-                         file = fileName,
-                         canRead = isRead, canWrite = !isRead,
-                         text = text, UTF8 = UTF8, open=open
+gcs_connection <-function(description, open, 
+                          encoding = "UTF8",
+           credentials = getCredential(),
+           project = getProjectName(),
+           bucket = getBucketName()){
+  stopifnot(
+    is_scalar_character(credential),
+    is_scalar_character(project),
+    is_scalar_character(bucket),
+    is_scalar_character(description),
+    is_scalar_logical(isRead),
+    is_scalar_logical(isText),
+    is_scalar_logical(encoding),
+    is.character(open)
   )
-}
-
-
-getBucketConnection <- function(fileName, bucket = NULL, 
-                                mode = "r", UTF8 =FALSE){
-  autoOpen <- TRUE
-  if(mode%in%c("r","rt")){
-    return(getInternalConnection(fileName, bucket, text = TRUE , UTF8 = UTF8, 
-                          isRead = TRUE , open = autoOpen))
-  }
-  if(mode%in%c("w","wt")){
-    return(getInternalConnection(fileName, bucket, text = TRUE , UTF8 = UTF8, 
-                          isRead = FALSE , open= autoOpen))
-  }
-  if(mode%in%c("rb")){
-    return(getInternalConnection(fileName, bucket, text = FALSE , UTF8 = FALSE, 
-                          isRead = TRUE , open= autoOpen))
-  }
-  if(mode%in%c("wb")){
-    return(getInternalConnection(fileName, bucket, text = FALSE , UTF8 = FALSE, 
-                          isRead = FALSE , open= autoOpen))
-  }
   
-  stop("unsupported mode option")
+  UTF8 = identical(encoding, "UTF8")
+  autoOpen = TRUE
+  
+  if(open%in%c("r","rt")){
+    isRead = TRUE
+    isText = TRUE
+  }
+  if(open%in%c("w","wt")){
+    isRead = FALSE
+    isText = TRUE
+  }
+  if(open%in%c("rb")){
+    isRead = TRUE
+    isText = FALSE
+  }
+  if(open%in%c("wb")){
+    isRead = FALSE
+    isText = FALSE
+  }
+  getbucketConnectionCPP(credentials = credential,
+                         project = project,
+                         bucket = bucket,
+                         file = description,
+                         isRead = isRead, istext = isText, 
+                         UTF8 = UTF8, autoOpen = autoOpen)
 }
+    
+           
+
+
 
 
 

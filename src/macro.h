@@ -4,3 +4,4 @@
 #define LLong long long int 
 
 #define TOCHAR(x) CHAR(Rf_asChar(x))
+#define CONNECTION_DESCRIPTION "googleBucket"
