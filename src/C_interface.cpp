@@ -51,3 +51,12 @@ std::vector<std::string> C_get_file_names(SEXP bucket){
 
 
 
+void test() {
+	StatusOr<gcs::ClientOptions> options =
+		gcs::ClientOptions::CreateDefaultClientOptions();
+	if (!options) {
+		Rprintf(options.status().message().c_str());
+	}
+	auto cred = options->credentials();
+	Rprintf(cred->AccountEmail().c_str());
+}
