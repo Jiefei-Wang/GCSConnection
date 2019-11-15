@@ -1,4 +1,5 @@
-#' @useDynLib googleCloudStorage, .registration = TRUE
+#' @useDynLib googleCloudStorageStream, .registration = TRUE
+#' @import googleCloudStorageR
 NULL
 
 

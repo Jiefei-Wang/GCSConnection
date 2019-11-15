@@ -2,7 +2,7 @@ gcs_connection <-function(description, open,
                           encoding = "UTF8",
            credentials = getCredential(),
            project = getProjectName(),
-           bucket = getBucketName()){
+           bucket = gcs_get_global_bucket()){
   stopifnot(
     is_scalar_character(credentials),
     is_scalar_character(project),
