@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // C_initializeClient
 void C_initializeClient(SEXP R_credential_name, SEXP R_project_name);
-RcppExport SEXP _googleCloudStorage_C_initializeClient(SEXP R_credential_nameSEXP, SEXP R_project_nameSEXP) {
+RcppExport SEXP _googleCloudStorageStream_C_initializeClient(SEXP R_credential_nameSEXP, SEXP R_project_nameSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type R_credential_name(R_credential_nameSEXP);
@@ -18,7 +18,7 @@ END_RCPP
 }
 // C_get_bucket_names
 std::vector<std::string> C_get_bucket_names();
-RcppExport SEXP _googleCloudStorage_C_get_bucket_names() {
+RcppExport SEXP _googleCloudStorageStream_C_get_bucket_names() {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -28,7 +28,7 @@ END_RCPP
 }
 // C_get_file_names
 std::vector<std::string> C_get_file_names(SEXP bucket);
-RcppExport SEXP _googleCloudStorage_C_get_file_names(SEXP bucketSEXP) {
+RcppExport SEXP _googleCloudStorageStream_C_get_file_names(SEXP bucketSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -39,7 +39,7 @@ END_RCPP
 }
 // getbucketConnection
 SEXP getbucketConnection(std::string credentials, std::string project, std::string bucket, std::string file, bool isRead, bool istext, bool UTF8, bool autoOpen);
-RcppExport SEXP _googleCloudStorage_getbucketConnection(SEXP credentialsSEXP, SEXP projectSEXP, SEXP bucketSEXP, SEXP fileSEXP, SEXP isReadSEXP, SEXP istextSEXP, SEXP UTF8SEXP, SEXP autoOpenSEXP) {
+RcppExport SEXP _googleCloudStorageStream_getbucketConnection(SEXP credentialsSEXP, SEXP projectSEXP, SEXP bucketSEXP, SEXP fileSEXP, SEXP isReadSEXP, SEXP istextSEXP, SEXP UTF8SEXP, SEXP autoOpenSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -57,14 +57,14 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_googleCloudStorage_C_initializeClient", (DL_FUNC) &_googleCloudStorage_C_initializeClient, 2},
-    {"_googleCloudStorage_C_get_bucket_names", (DL_FUNC) &_googleCloudStorage_C_get_bucket_names, 0},
-    {"_googleCloudStorage_C_get_file_names", (DL_FUNC) &_googleCloudStorage_C_get_file_names, 1},
-    {"_googleCloudStorage_getbucketConnection", (DL_FUNC) &_googleCloudStorage_getbucketConnection, 8},
+    {"_googleCloudStorageStream_C_initializeClient", (DL_FUNC) &_googleCloudStorageStream_C_initializeClient, 2},
+    {"_googleCloudStorageStream_C_get_bucket_names", (DL_FUNC) &_googleCloudStorageStream_C_get_bucket_names, 0},
+    {"_googleCloudStorageStream_C_get_file_names", (DL_FUNC) &_googleCloudStorageStream_C_get_file_names, 1},
+    {"_googleCloudStorageStream_getbucketConnection", (DL_FUNC) &_googleCloudStorageStream_getbucketConnection, 8},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_googleCloudStorage(DllInfo *dll) {
+RcppExport void R_init_googleCloudStorageStream(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

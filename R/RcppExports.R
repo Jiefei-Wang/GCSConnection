@@ -2,18 +2,18 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 C_initializeClient <- function(R_credential_name, R_project_name) {
-    invisible(.Call(`_googleCloudStorage_C_initializeClient`, R_credential_name, R_project_name))
+    invisible(.Call(`_googleCloudStorageStream_C_initializeClient`, R_credential_name, R_project_name))
 }
 
 C_get_bucket_names <- function() {
-    .Call(`_googleCloudStorage_C_get_bucket_names`)
+    .Call(`_googleCloudStorageStream_C_get_bucket_names`)
 }
 
 C_get_file_names <- function(bucket) {
-    .Call(`_googleCloudStorage_C_get_file_names`, bucket)
+    .Call(`_googleCloudStorageStream_C_get_file_names`, bucket)
 }
 
 getbucketConnection <- function(credentials, project, bucket, file, isRead, istext, UTF8, autoOpen) {
-    .Call(`_googleCloudStorage_getbucketConnection`, credentials, project, bucket, file, isRead, istext, UTF8, autoOpen)
+    .Call(`_googleCloudStorageStream_getbucketConnection`, credentials, project, bucket, file, isRead, istext, UTF8, autoOpen)
 }
 
