@@ -1,7 +1,1 @@
 CXX_STD=CXX11
-GCS_CXXFLAGS   := $(shell pkg-config storage_client --cflags)
-GCS_CXXLDFLAGS := $(shell pkg-config storage_client --libs-only-L)
-GCS_LIBS       := $(shell pkg-config storage_client --libs-only-l)
-
-PKG_CPPFLAGS = $(CXXFLAGS) $(GCS_CXXFLAGS) -fPIC
-PKG_LIBS = $(GCS_CXXLDFLAGS) $(GCS_LIBS) -lz  -lcares
