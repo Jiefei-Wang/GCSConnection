@@ -4,15 +4,12 @@ from google.oauth2 import service_account
 from google.auth.transport.requests import AuthorizedSession
 from google.resumable_media import requests, common
 
-credentials="C:/Users/Jeff/OneDrive/keys/google_cloud.json"
-credentials = "D:/OneDrive/keys/google_cloud.json"
-project = "civil-hash-255615"
-bucket_name = "bioconductor_test"
-file_name = "test.txt"
-
 ## The return value is a blob
 def get_input_stream(credentials, bucket_name, file_name):
-    client = storage.Client.from_service_account_json(credentials)
+    if(credentials==""):
+        client = storage.Client.create_anonymous_client()
+    else:
+        client = storage.Client.from_service_account_json(credentials)
     bucket = client.get_bucket(bucket_name)
     return bucket.get_blob(file_name)
 
@@ -22,11 +19,13 @@ def read_stream(stream,start,end):
 
 
 ## The return value is a upload stream
-def get_output_stream(credentials, bucket_name, file_name):
+def get_output_stream(credentials, bucket_name, file_name,content_type, chunk_size):
     client = storage.Client.from_service_account_json(credentials)
-    stream=GCSObjectStreamUpload(client=client,
-                            bucket_name=bucket_name,
-                            blob_name=file_name)
+    stream=GCSObjectStreamUpload(client = client,
+                            bucket_name = bucket_name,
+                            blob_name =file_name,
+                            content_type = content_type,
+                            chunk_size = chunk_size)
     return stream
 
 
@@ -48,7 +47,8 @@ class GCSObjectStreamUpload(object):
             client: storage.Client,
             bucket_name: str,
             blob_name: str,
-            chunk_size: int=1024 * 1024
+            content_type: str,
+            chunk_size: int
         ):
         self._client = client
         self._bucket = self._client.bucket(bucket_name)
@@ -58,11 +58,12 @@ class GCSObjectStreamUpload(object):
         self._buffer_size = 0
         self._chunk_size = chunk_size
         self._read = 0
-
+        
         self._transport = AuthorizedSession(
             credentials=self._client._credentials
         )
         self._request = None  # type: requests.ResumableUpload
+        self._content_type = content_type
 
     def __enter__(self):
         self.start()
@@ -82,7 +83,7 @@ class GCSObjectStreamUpload(object):
         )
         self._request.initiate(
             transport=self._transport,
-            content_type='text/plain',
+            content_type=self._content_type,
             stream=self,
             stream_final=False,
             metadata={'name': self._blob.name},
@@ -114,3 +115,17 @@ class GCSObjectStreamUpload(object):
     
     def tell(self) -> int:
         return self._read
+
+
+
+
+
+
+
+cl=storage.Client.create_anonymous_client()
+bucket= cl.get_bucket("genomics-public-data")
+blob=bucket.get_blob("NA12878.chr20.sample.DeepVariant-0.7.2.vcf")
+
+blob.download_to_filename("test.vcf")
+
+

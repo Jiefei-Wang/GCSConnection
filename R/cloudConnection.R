@@ -1,11 +1,11 @@
-package_settings <- new.env()
-package_settings[["credentials"]] = NULL
+
 
 #' @export
 gcs_connection <-function(description, open, 
                           encoding = "UTF8",
            credentials = gcs_get_cloud_auth(),
            bucket = gcs_get_global_bucket()){
+  if(is.null(credentials)) credentials = ""
   stopifnot(
     is_scalar_character(credentials),
     is_scalar_character(bucket),
@@ -40,7 +40,7 @@ gcs_connection <-function(description, open,
                          file = description,
                          isRead = isRead, istext = isText, 
                          UTF8 = UTF8, autoOpen = autoOpen,
-                         buffLength = 512)
+                         readBuffLength = gcs_get_input_stream_buff())
 }
     
 
