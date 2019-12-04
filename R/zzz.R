@@ -20,6 +20,10 @@ NULL
   # import("google.cloud.storage", delay_load = TRUE)
   # import("google.auth.transport.requests", delay_load = TRUE)
   # import("google.resumable_media", delay_load = TRUE)
-  source_python(paste0(libname,'/',pkgname,'/python/utils.py'),envir= python_env)
+  file <- paste0(libname,'/',pkgname,'/python/utils.py')
+  if(!file.exists(file)){
+    file <- paste0(libname,'/',pkgname,'/inst/python/utils.py')
+  }
+  source_python(file,envir= python_env)
 }
 
