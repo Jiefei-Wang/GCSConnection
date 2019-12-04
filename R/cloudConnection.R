@@ -29,7 +29,6 @@ gcs_connection <-function(description, open,
                           encoding = getOption("encoding"),
            credentials = NULL,
            bucket = NULL){
-  
   stopifnot(
     is_scalar_character_or_null(credentials),
     is_scalar_character_or_null(bucket),

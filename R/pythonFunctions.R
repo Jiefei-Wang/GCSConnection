@@ -2,7 +2,7 @@
 ## the variable python_env contains all exported python functions
 
 python_env = new.env()
-source_python('python/utils.py',envir= python_env)
+
 
 get_input_stream<-function(credentials, bucket, file){
   stream <- python_env$get_input_stream(credentials,bucket,file)

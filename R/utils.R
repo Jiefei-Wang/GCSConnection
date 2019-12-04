@@ -1,7 +1,16 @@
 package_settings <- new.env()
+# package_settings[["initialized"]] <- FALSE
 package_settings[["credentials"]] <- ""
 package_settings[["input_buff_len"]] <- 1024*1024
 package_settings[["output_buff_len"]] <- 1024 *1024
+# 
+# initial_package <- function(){
+#   if(!package_settings[["initialized"]]){
+#   package_path <- find.package("googleCloudStorageStream")
+#   source_python(paste0(package_path,'/python/utils.py'),envir= python_env)
+#   package_settings[["initialized"]] <- TRUE
+#   }
+# }
 
 digest_path <- function(description, bucket){
   if(length(grep("gs://",description,fixed=T)) == 1){

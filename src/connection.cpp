@@ -224,7 +224,6 @@ SEXP get_bucket_connection(std::string credentials, std::string project, std::st
 	SEXP rc = PROTECT(R_new_custom_connection(file.c_str(),
 		openMode.c_str(), CONNECTION_CLASS, &con));
 
-
 	bucketConnection bc = new bucketCon();
 	bc->project_name = project;
 	bc->bucket_name = bucket;

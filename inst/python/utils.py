@@ -1,6 +1,6 @@
 from google.cloud import storage
 from google.cloud.storage import Blob
-from google.oauth2 import service_account
+##from google.oauth2 import service_account
 from google.auth.transport.requests import AuthorizedSession
 from google.resumable_media import requests, common
 
