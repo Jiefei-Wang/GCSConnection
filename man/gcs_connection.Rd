@@ -37,8 +37,7 @@ This function creates an R connection to a file on google cloud storage.
 ## Connect to the Landsat data on google cloud storage
 ## This is a public dataset so there is no need to provide
 ## credentials.
-file <-
-"gs://gcp-public-data-landsat/LC08/01/044/034/LC08_L1GT_044034_20130330_20170310_01_T2/LC08_L1GT_044034_20130330_20170310_01_T2_ANG.txt"
+file <- "gs://genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
 con <- gcs_connection(description = file, open = "r", credentials = "")
 readLines(con, n = 1L)
 close(con)

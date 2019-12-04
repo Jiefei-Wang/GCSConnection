@@ -46,3 +46,4 @@ src/*.so
 src/*.lib
 
 inst/test/
+inst/doc

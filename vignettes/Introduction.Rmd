@@ -1,0 +1,63 @@
+---
+title: "Introduction"
+author: 
+- name: Jiefei Wang
+  affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY
+date: "`r Sys.Date()`"
+output:
+    BiocStyle::html_document:
+        toc: true
+        toc_float: true
+vignette: >
+  %\VignetteIndexEntry{quickStart}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+package: googleCloudStorageStream
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(googleCloudStorageStream)
+```
+
+#Getting started
+#Installation
+The package requires a python 3 environment and `google-cloud-storage` and `google-resumable-media` modules. please visit [Python main page](https://www.python.org/) to install python 3. The required modules can be installed via pip by
+```
+pip install --upgrade google-cloud-storage
+pip install --upgrade google-resumable-media
+```
+
+#Credentials
+You need to have a credential file to authenticate with Google Cloud Storage API. Please follow the instructions on [Google Authentication](https://cloud.google.com/docs/authentication/production) to create your credential file and download it to your local machine. The package will search for the credentials from the environment variable `GOOGLE_APPLICATION_CREDENTIALS` when it is loaded. If it fails to find the credentials, it will look for the environment variable `GCS_AUTH_FILE`
+instead. If both environment variables are empty, you need to manually provide the credentials by calling `gcs_cloud_auth`. 
+
+
+#Connections
+Createing a connection to a file on a Google Cloud bucket is simple, you just need to provide the file name, bucket name and the open mode. Below is an example to create a read connection with a public dataset on Google Cloud Platform.
+```{r}
+file_name <- "NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
+bucket_name <- "genomics-public-data"
+con <- gcs_connection(description = file_name, open = "r",credentials = "", bucket = bucket_name)
+readLines(con, n = 4L)
+close(con)
+```
+By providing an empty string to the parameter `credential`, the connection will be built with an anonymous credentials. This is useful for accessing public dataset on Google Cloud. Instead of specifying file and bucket name individually, you also can create a connection by providing a link to the file. For example:
+```{r}
+file_link <- "gs://genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
+con <- gcs_connection(description = file_link, open = "r",credentials = "")
+readLines(con, n = 4L)
+close(con)
+```
+The above code can create the same connection as the previous example. Note that if both link and bucket name are provided, the bucket name will be ignored. The supported open modes are `r`, `rb`, `w`, `wb`, please refer to the R document `?connection` to see the details of the modes.
+
+For the write connection, it can be made by specifying an appropriate open mode in the `gcs_connection` function. Please note that due to the limitation of the Google Cloud Storage, the write connection is not seekable, which means you cannot use the `seek` function to navigate through the file. Once the write connection is created, it will erase the existing file with the same name. After the write connection is closed, the file will become immutable. 
+
+
+
+
+

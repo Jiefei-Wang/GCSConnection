@@ -3,7 +3,6 @@
 #include <string>
 #include "macro.h"
 #include "utils.h"
-#include "connection.h"
 
 
 // [[Rcpp::export]]

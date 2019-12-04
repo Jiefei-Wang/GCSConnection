@@ -2,6 +2,7 @@
 #include <string>
 #include "macro.h"
 #include "utils.h"
+#include "altrep.h"
 
 #define class myclass
 #define private myprivate
@@ -153,8 +154,8 @@ static size_t read_connection(void* target, size_t size, size_t nitems, Rconnect
 static size_t write_connection(const void* target, size_t size, size_t nitems, Rconnection con) {
 	bucketConnection bc = (bucketConnection)con->myprivate;
 	size_t requestSize = size * nitems;
-	SEXP tempVar = Rf_protect(Rf_allocVector(RAWSXP, requestSize));
-	memcpy(DATAPTR(tempVar), target, requestSize);
+	//SEXP tempVar = Rf_protect(Rf_allocVector(RAWSXP, requestSize));
+	SEXP tempVar = Rf_protect(make_alt_raw(requestSize, const_cast<void*>(target)));
 	Rf_protect(make_call("write_stream", bc->stream, tempVar));
 	//Rprintf("file write:%lld bytes\n", requestSize);
 	//bc->writeCon.write((const char*)target, requestSize);

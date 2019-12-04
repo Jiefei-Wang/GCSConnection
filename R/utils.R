@@ -1,8 +1,7 @@
 package_settings <- new.env()
-package_settings[["credentials"]] = ""
-package_settings[["input_buff_len"]] = 1024*1024
-package_settings[["output_buff_len"]] = 1024 *1024
-
+package_settings[["credentials"]] <- ""
+package_settings[["input_buff_len"]] <- 1024*1024
+package_settings[["output_buff_len"]] <- 1024 *1024
 
 digest_path <- function(description, bucket){
   if(length(grep("gs://",description,fixed=T)) == 1){
@@ -45,9 +44,9 @@ is_scalar_logical <- function( x ) {
 #' @export
 gcs_cloud_auth <- function(creds){
   package_settings[["credentials"]] <- creds
-  if(!is.null(creds)){
-    gcs_auth(creds)
-  }
+  # if(!is.null(creds)){
+  #   gcs_auth(creds)
+  # }
 }
 
 #' @rdname authentication
@@ -55,10 +54,10 @@ gcs_cloud_auth <- function(creds){
 gcs_get_cloud_auth <- function(){
   gcs_get_cloud_auth_internal()
 }
-gcs_get_cloud_auth_internal <- function(errorWhenEmpty = FALSE){
+gcs_get_cloud_auth_internal <- function(useAnonymous = FALSE){
   creds <- package_settings[["credentials"]]
-  if(errorWhenEmpty && is.null(creds)){
-    stop("Credentials is not provided, please call `gcs_cloud_auth` to set the credentials")
+  if(useAnonymous && is.null(creds)){
+    return("")
   }
   creds
 }
@@ -81,6 +80,11 @@ gcs_input_stream_buff<-function(buff_size){
 #' @rdname buffer_size
 #' @export
 gcs_output_stream_buff<-function(buff_size){
+  buff_size <- as.double(buff_size)
+  if(buff_size < 256*1024){
+    warning("The buffer size should be at least 256KB")
+    buff_size <- 256*1024
+  }
   package_settings[["output_buff_len"]] <- as.double(buff_size)
 }
 #' @rdname buffer_size

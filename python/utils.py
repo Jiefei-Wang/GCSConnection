@@ -122,10 +122,4 @@ class GCSObjectStreamUpload(object):
 
 
 
-cl=storage.Client.create_anonymous_client()
-bucket= cl.get_bucket("genomics-public-data")
-blob=bucket.get_blob("NA12878.chr20.sample.DeepVariant-0.7.2.vcf")
-
-blob.download_to_filename("test.vcf")
-
 

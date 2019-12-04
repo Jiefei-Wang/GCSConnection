@@ -8,12 +8,19 @@ Maintainer: Jiefei Wang <szwjf08@gmail.com>
 Description: The package can create R connections with files on google cloud storage.
   Both read and write connections are supported. 
 License: GPL (>= 2)
+Depends: 
+  R (>= 4.0.0)
 Imports: 
   Rcpp (>= 1.0.2),
   googleCloudStorageR,
   reticulate
+Suggests: 
+    testthat,
+    knitr,
+    rmarkdown
 LinkingTo: Rcpp
 RoxygenNote: 7.0.1
 Encoding: UTF-8
 systemDependencies: 
   python 3 with package google-cloud-storage and google-resumable-media installed
+VignetteBuilder: knitr
