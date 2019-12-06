@@ -18,6 +18,10 @@ gcs_get_output_stream_buff()
 \arguments{
 \item{buff_size}{Integer. The buffer size}
 }
+\value{
+Get functions: the current buffer size.
+Set functions: the previous buffer size.
+}
 \description{
 Get/Set IO stream buffer size, the buffer size can be set at any time
 but only takes effect on the connections created after the change. The default 

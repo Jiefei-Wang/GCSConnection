@@ -10,8 +10,8 @@ get_input_stream<-function(credentials, bucket, file){
     stop("The file `",file, "` does not exist")
   list(stream, get_input_stream_size(stream))
 }
-get_output_stream<-function(credentials, bucket, file, content){
-  stream <- python_env$get_output_stream(credentials,bucketName,
+get_output_stream<-function(credentials, bucket_name, file, content){
+  stream <- python_env$get_output_stream(credentials,bucket_name,
                                          file,content,gcs_get_output_stream_buff())
   python_env$open_output_stream(stream)
   list(stream)

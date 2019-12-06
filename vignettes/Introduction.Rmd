@@ -31,6 +31,11 @@ The package requires a python 3 environment and `google-cloud-storage` and `goog
 pip install --upgrade google-cloud-storage
 pip install --upgrade google-resumable-media
 ```
+Alternatively, you may want to install the packages in a virtual or Conda environment by calling
+```
+googleCloudStorageStream::install_python_dependencies(method = "auto", conda = "auto")
+```
+
 
 #Credentials
 You need to have a credential file to authenticate with Google Cloud Storage API. Please follow the instructions on [Google Authentication](https://cloud.google.com/docs/authentication/production) to create your credential file and download it to your local machine. The package will search for the credentials from the environment variable `GOOGLE_APPLICATION_CREDENTIALS` when it is loaded. If it fails to find the credentials, it will look for the environment variable `GCS_AUTH_FILE`
