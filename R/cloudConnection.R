@@ -69,15 +69,22 @@ gcs_connection <-function(description, open,
     isRead <- FALSE
     isText <- FALSE
   }
+  if(isRead){
+    bufferLength <- gcs_get_input_stream_buff()
+  }else{
+    bufferLength <- gcs_get_output_stream_buff()
+  }
+  
   autoOpen = TRUE
   project <- ""
+  
   get_bucket_connection(credentials = credentials,
                          project = project,
                          bucket = bucket,
                          file = description,
                          isRead = isRead, istext = isText, 
                          UTF8 = UTF8, autoOpen = autoOpen,
-                         readBuffLength = gcs_get_input_stream_buff())
+                         buffLength = bufferLength)
 }
     
 

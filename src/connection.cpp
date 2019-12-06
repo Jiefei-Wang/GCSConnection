@@ -36,6 +36,8 @@ struct bucketCon {
 };
 
 
+static size_t write_connection_internal(void* target, size_t size, Rconnection con);
+
 
 static Rboolean open_connection(Rconnection con) {
 	//Rprintf("file open\n");
@@ -79,6 +81,9 @@ static void destroy_connection(Rconnection con) {
 	}
 	if (bc->stream != NULL) {
 		if (con->canwrite == TRUE) {
+			if (con->buff_stored_len > 0) {
+				write_connection_internal(con->buff, con->buff_stored_len, con);
+			}
 			make_call("close_output_stream", bc->stream);
 		}
 		R_ReleaseObject(bc->stream);
@@ -161,18 +166,48 @@ static size_t read_connection(void* target, size_t size, size_t nitems, Rconnect
 	return read_size;
 }
 
+static size_t write_connection_internal(void* target, size_t size, Rconnection con) {
+	bucketConnection bc = (bucketConnection)con->myprivate;
+	//Rprintf("begin file write:%lld bytes, off : %lld\n", size, bc->offset);
+	SEXP tempVar = Rf_protect(make_alt_raw(size, const_cast<void*>(target)));
+	make_call("write_stream", bc->stream, tempVar);
+	bc->offset = bc->offset + size;
+	//Rprintf("finish file write:%lld bytes, off : %lld\n", size, bc->offset);
+	Rf_unprotect(1);
+	return size;
+}
+
 static size_t write_connection(const void* target, size_t size, size_t nitems, Rconnection con) {
 	bucketConnection bc = (bucketConnection)con->myprivate;
-	size_t requestSize = size * nitems;
-	//SEXP tempVar = Rf_protect(Rf_allocVector(RAWSXP, requestSize));
-	SEXP tempVar = Rf_protect(make_alt_raw(requestSize, const_cast<void*>(target)));
-	Rf_protect(make_call("write_stream", bc->stream, tempVar));
-	//Rprintf("file write:%lld bytes\n", requestSize);
-	//bc->writeCon.write((const char*)target, requestSize);
-	bc->offset = bc->offset + requestSize;
-	Rf_unprotect(1);
-	return requestSize;
+	size_t request_size = size * nitems;
+	size_t buffer_space = con->buff_len - con->buff_stored_len;
+
+	if (buffer_space > request_size) {
+		memcpy((char*)con->buff + con->buff_stored_len, target, request_size);
+		con->buff_stored_len = con->buff_stored_len + request_size;
+	}
+	else {
+		write_connection_internal(con->buff, con->buff_stored_len, con);
+		write_connection_internal(const_cast<void*>(target), request_size, con);
+		con->buff_stored_len = 0;
+
+		/*
+		memcpy((char*)con->buff + con->buff_stored_len, target, buffer_space);
+		write_connection_internal(con->buff, con->buff_len, con);
+		con->buff_stored_len = request_size - con->buff_len;
+		target = (char*)target + con->buff_len;
+		request_size = request_size - con->buff_len;
+		if (request_size > 0) {
+			memcpy(con->buff, target, request_size);
+		}
+		*/
+	}
+
+	return size * nitems;
 }
+
+
+
 
 
 static int get_byte_from_connection(Rconnection con) {
@@ -214,7 +249,7 @@ static double seek_connection(Rconnection con, double where, int origin, int rw)
 
 // [[Rcpp::export]]
 SEXP get_bucket_connection(std::string credentials, std::string project, std::string bucket, std::string file,
-	bool isRead, bool istext, bool UTF8, bool autoOpen, double readBuffLength) {
+	bool isRead, bool istext, bool UTF8, bool autoOpen, double buffLength) {
 	string openMode;
 	if (isRead && istext) {
 		openMode = "r";
@@ -259,14 +294,12 @@ SEXP get_bucket_connection(std::string credentials, std::string project, std::st
 	con->fgetc = get_byte_from_connection;
 	con->fgetc_internal = get_byte_from_connection;
 	con->seek = seek_connection;
-	con->buff_len = readBuffLength;
+	con->buff_len = buffLength;
 	//Only read has a buff pointer
 	// Write buff is implemented in python
-	if (isRead) {
-		con->buff = (unsigned char*) malloc(con->buff_len);
-		con->buff_pos = 0;
-		con->buff_stored_len = 0;
-	}
+	con->buff = (unsigned char*) malloc(con->buff_len);
+	con->buff_pos = 0;
+	con->buff_stored_len = 0;
 
 
 	if (autoOpen) {

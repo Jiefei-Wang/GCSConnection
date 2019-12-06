@@ -2,8 +2,8 @@ package_settings <- new.env()
 package_settings[["python_code_path"]] <- NULL
 package_settings[["initialized"]] <- FALSE
 package_settings[["credentials"]] <- ""
-package_settings[["input_buff_len"]] <- 1024*1024
-package_settings[["output_buff_len"]] <- 1024 *1024
+package_settings[["input_buff_len"]] <- 1024L*1024L
+package_settings[["output_buff_len"]] <- 1024L *1024L
 
 
 
@@ -122,19 +122,19 @@ gcs_get_cloud_auth_internal <- function(useAnonymous = FALSE){
 #' @export
 gcs_input_stream_buff<-function(buff_size){
   old_size <- package_settings[["input_buff_len"]]
-  package_settings[["input_buff_len"]] <- as.double(buff_size)
+  package_settings[["input_buff_len"]] <- as.integer(buff_size)
   old_size
 }
 #' @rdname buffer_size
 #' @export
 gcs_output_stream_buff<-function(buff_size){
   old_size <- package_settings[["output_buff_len"]]
-  buff_size <- as.double(buff_size)
+  buff_size <- as.integer(buff_size)
   if(buff_size < 256*1024){
     warning("The buffer size should be at least 256KB")
     buff_size <- 256*1024
   }
-  package_settings[["output_buff_len"]] <- as.double(buff_size)
+  package_settings[["output_buff_len"]] <- as.integer(buff_size)
   old_size
 }
 #' @rdname buffer_size
