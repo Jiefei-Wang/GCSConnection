@@ -11,3 +11,8 @@
 #define PACKAGE_ENV_NAME "namespace:" PACKAGE_NAME
 #define PACKAGE_NAMESPACE R_FindNamespace(Rf_mkString(PACKAGE_NAME))
 
+
+#define STRING(x) #x
+#define EXPECT(v,a) static_assert((v)==(a), "Expecting " #v "==" #a " [" #v ": "  STRING(v) "]")
+
+

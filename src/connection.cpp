@@ -10,6 +10,10 @@
 #undef class
 #undef private
 
+// R_CONNECTIONS_VERSION should be 1
+EXPECT(R_CONNECTIONS_VERSION, 1);
+
+
 using namespace Rcpp;
 using std::string;
 
