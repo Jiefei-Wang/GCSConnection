@@ -90,12 +90,12 @@ static void destroy_connection(Rconnection con) {
 
 static size_t read_connection(void* target, size_t size, size_t nitems, Rconnection con) {
 	bucketConnection bc = (bucketConnection)con->myprivate;
-	//Rprintf("first: %lld, %lld, %s\n", bc->offset, bc->file_size, con->EOF_signalled == TRUE ? "t" : "f");
+	//Rprintf("first: %lld, %lld, %lld, %s\n", bc->offset, bc->file_size, size * nitems,con->EOF_signalled == TRUE ? "t" : "f");
 	if (con->EOF_signalled == TRUE) return 0;
 	size_t request_size = size * nitems;
 	size_t catched_size = con->buff_stored_len - con->buff_pos;
-
-
+	//Rprintf("buffer length: %lld\n", con->buff_len);
+	
 	size_t read_size;
 	if (catched_size >= request_size) {
 		//Try to read from buff
@@ -103,7 +103,7 @@ static size_t read_connection(void* target, size_t size, size_t nitems, Rconnect
 		con->buff_pos = con->buff_pos + request_size;
 		read_size = request_size;
 		bc->offset = bc->offset + read_size;
-		//printf("read cache1: %lld, %lld\n", read_size, bc->offset);
+		//Rprintf("read cache1: %lld, %lld\n", read_size, bc->offset);
 	}
 	else {
 		//If there is no enough data in the buff
@@ -114,40 +114,46 @@ static size_t read_connection(void* target, size_t size, size_t nitems, Rconnect
 		//clean buff
 		con->buff_pos = 0;
 		con->buff_stored_len = 0;
-		//printf("read cache2: %lld, %lld\n", read_size, bc->offset);
+		//Rprintf("read cache2: %lld, %lld\n", read_size, bc->offset);
 
 		//Read from the cloud
 		size_t cloud_request_size = request_size - catched_size;
-		//printf("cloud request size: %lld\n", cloud_request_size);
+		//Rprintf("cloud request size: %lld\n", cloud_request_size);
 		//The size that will be read from the cloud, the extra data will be put in the buff
 		size_t cloud_buff_size = cloud_request_size / con->buff_len * con->buff_len;
 		cloud_buff_size = cloud_buff_size >= cloud_request_size ? cloud_buff_size : (cloud_buff_size + con->buff_len);
-		//printf("cloud_buff_size: %lld\n", cloud_buff_size);
-		SEXP result = Rf_protect(make_call("read_stream", bc->stream, wrap(bc->offset), wrap(bc->offset + cloud_buff_size - 1)));
-		size_t cloud_read_size = XLENGTH(result);
-		//printf("cloud_read_size: %lld\n", cloud_read_size);
+		//Check if the read is in the end of the file
+		cloud_buff_size = bc->file_size - bc->offset > cloud_buff_size ? cloud_buff_size : bc->file_size - bc->offset;
+		//Rprintf("cloud_buff_size: %lld\n", cloud_buff_size);
+		if (cloud_buff_size > 0) {
+			SEXP result = Rf_protect(make_call("read_stream", bc->stream, wrap(bc->offset), wrap(bc->offset + cloud_buff_size - 1)));
+			size_t cloud_read_size = XLENGTH(result);
+			//Rprintf("cloud_read_size: %lld\n", cloud_read_size);
 
-		
-		
-		if (cloud_read_size > cloud_request_size) {
-			read_size = read_size + cloud_request_size;
-			con->buff_stored_len = cloud_read_size - cloud_request_size;
+			if (cloud_read_size > cloud_request_size) {
+				/*
+				If the read size is larger than the required size
+				put the rest into the buffer
+				*/
+				read_size = read_size + cloud_request_size;
+				con->buff_stored_len = cloud_read_size - cloud_request_size;
 
-			memcpy((char*)target + catched_size, DATAPTR(result), cloud_request_size);
-			memcpy(con->buff, (char*)DATAPTR(result)+ cloud_request_size, con->buff_stored_len);
+				memcpy((char*)target + catched_size, DATAPTR(result), cloud_request_size);
+				memcpy(con->buff, (char*)DATAPTR(result) + cloud_request_size, con->buff_stored_len);
 
-			bc->offset = bc->offset + cloud_request_size;
-			//printf("read cloud1: %lld,%lld , %lld\n", cloud_request_size, cloud_read_size, bc->offset);
-			//printf("cached size: %lld\n", con->buff_stored_len);
+				bc->offset = bc->offset + cloud_request_size;
+				//Rprintf("read cloud1: %lld,%lld , %lld\n", cloud_request_size, cloud_read_size, bc->offset);
+				//Rprintf("cached size: %lld\n", con->buff_stored_len);
+			}
+			else {
+				read_size = read_size + cloud_read_size;
+				memcpy((char*)target + catched_size, DATAPTR(result), cloud_read_size);
+
+				bc->offset = bc->offset + cloud_read_size;
+				//Rprintf("read cloud2: %lld, %lld\n", cloud_read_size, bc->offset);
+			}
+			Rf_unprotect(1);
 		}
-		else {
-			read_size = read_size + cloud_read_size;
-			memcpy((char*)target + catched_size, DATAPTR(result), cloud_read_size);
-
-			bc->offset = bc->offset + cloud_read_size;
-			//printf("read cloud2: %lld, %lld\n", cloud_read_size, bc->offset);
-		}
-		Rf_unprotect(1);
 	}
 	con->incomplete = bc->offset < bc->file_size ? TRUE : FALSE;
 	con->EOF_signalled = con->incomplete == TRUE ? FALSE : TRUE;
@@ -177,7 +183,7 @@ static int get_byte_from_connection(Rconnection con) {
 
 static double seek_connection(Rconnection con, double where, int origin, int rw) {
 	bucketConnection bc = (bucketConnection)con->myprivate;
-	//printf("%d\n", rw);
+	//Rprintf("%d\n", rw);
 	if (!(rw == 0 && con->canread == TRUE))
 		Rf_error("Only read connection is seekable");
 
