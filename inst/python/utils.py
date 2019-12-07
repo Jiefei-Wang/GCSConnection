@@ -1,6 +1,5 @@
 from google.cloud import storage
 from google.cloud.storage import Blob
-##from google.oauth2 import service_account
 from google.auth.transport.requests import AuthorizedSession
 from google.resumable_media import requests, common
 
@@ -35,12 +34,12 @@ def open_output_stream(stream):
 def close_output_stream(stream):
     stream.stop()
 
-
 def write_stream(stream, data):
     stream.write(data)
 
 
-
+## The class is from https://dev.to/sethmlarson/python-data-streaming-to-google-cloud-storage-with-resumable-uploads-458h
+## with slight changes.
 class GCSObjectStreamUpload(object):
     def __init__(
             self, 
@@ -91,7 +90,7 @@ class GCSObjectStreamUpload(object):
 
     def stop(self):
         self._request.transmit_next_chunk(self._transport)
-
+        
     def write(self, data: bytes) -> int:
         data_len = len(data)
         self._buffer_size += data_len
@@ -104,8 +103,6 @@ class GCSObjectStreamUpload(object):
                 self._request.recover(self._transport)
 
     def read(self, chunk_size: int) -> bytes:
-        # I'm not good with efficient no-copy buffering so if this is
-        # wrong or there's a better way to do this let me know! :-)
         to_read = min(chunk_size, self._buffer_size)
         memview = memoryview(self._buffer)
         self._buffer = memview[to_read:].tobytes()

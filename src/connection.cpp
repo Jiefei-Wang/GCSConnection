@@ -66,19 +66,13 @@ static Rboolean open_connection(Rconnection con) {
 
 }
 
-/*
-static void close_connection(Rconnection con) {
-	Rprintf("file close\n");
-}
-*/
 
 static void destroy_connection(Rconnection con) {
 	//Rprintf("file destroy\n");
 	bucketConnection bc = (bucketConnection)con->myprivate;
-	if (con->canread == TRUE) {
-		//Rprintf("delete buff:%p", con->buff);
-		//free(con->buff);
-	}
+	//Wired behavior: No need to free the buffer since R will free it
+	//free(con->buff);
+	
 	if (bc->stream != NULL) {
 		if (con->canwrite == TRUE) {
 			if (con->buff_stored_len > 0) {
@@ -190,17 +184,6 @@ static size_t write_connection(const void* target, size_t size, size_t nitems, R
 		write_connection_internal(con->buff, con->buff_stored_len, con);
 		write_connection_internal(const_cast<void*>(target), request_size, con);
 		con->buff_stored_len = 0;
-
-		/*
-		memcpy((char*)con->buff + con->buff_stored_len, target, buffer_space);
-		write_connection_internal(con->buff, con->buff_len, con);
-		con->buff_stored_len = request_size - con->buff_len;
-		target = (char*)target + con->buff_len;
-		request_size = request_size - con->buff_len;
-		if (request_size > 0) {
-			memcpy(con->buff, target, request_size);
-		}
-		*/
 	}
 
 	return size * nitems;
@@ -295,8 +278,7 @@ SEXP get_bucket_connection(std::string credentials, std::string project, std::st
 	con->fgetc_internal = get_byte_from_connection;
 	con->seek = seek_connection;
 	con->buff_len = buffLength;
-	//Only read has a buff pointer
-	// Write buff is implemented in python
+	//No need to free the memory after usage.
 	con->buff = (unsigned char*) malloc(con->buff_len);
 	con->buff_pos = 0;
 	con->buff_stored_len = 0;
