@@ -9,7 +9,7 @@ Description: The package can create R connections with files on google cloud sto
   Both read and write connections are supported. 
 License: GPL (>= 2)
 Depends: 
-  R (>= 4.0.0)
+  R (>= 3.6.0)
 Imports: 
   Rcpp (>= 1.0.2),
   googleCloudStorageR,
