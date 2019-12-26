@@ -1,6 +1,7 @@
 #' @useDynLib googleCloudStorageStream, .registration = TRUE
 #' @import googleCloudStorageR
-#' @import reticulate
+#' @importFrom  googleAuthR gar_auth_service
+#' @import httr
 NULL
 
 
@@ -16,12 +17,5 @@ NULL
   }
   pkg_namespace <- getNamespace("googleCloudStorageStream")
   C_package_onLoad(pkg_namespace)
-  ## Tell R that these modules need to be loaded.
-  # import("google.cloud.storage", delay_load = TRUE)
-  # import("google.auth.transport.requests", delay_load = TRUE)
-  # import("google.resumable_media", delay_load = TRUE)
-  file <- paste0(libname,'/',pkgname)
-  
-  package_settings[["python_code_path"]] <- file
 }
 

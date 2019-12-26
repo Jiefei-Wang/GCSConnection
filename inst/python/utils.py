@@ -96,11 +96,11 @@ class GCSObjectStreamUpload(object):
         self._buffer_size += data_len
         self._buffer += data
         del data
-        while self._buffer_size >= self._chunk_size:
-            try:
-                self._request.transmit_next_chunk(self._transport)
-            except common.InvalidResponse:
-                self._request.recover(self._transport)
+##        while self._buffer_size >= self._chunk_size:
+##            try:
+##                self._request.transmit_next_chunk(self._transport)
+##            except common.InvalidResponse:
+##                self._request.recover(self._transport)
 
     def read(self, chunk_size: int) -> bytes:
         to_read = min(chunk_size, self._buffer_size)
@@ -115,8 +115,9 @@ class GCSObjectStreamUpload(object):
 
 
 
-
-
-
-
-
+credentials="D:\\OneDrive\\keys\\google_cloud.json"
+bucket_name ="bioconductor_test"
+file_name="test1"
+content_type="application/octet-stream"
+chunk_size=256 *1024
+client = storage.Client.from_service_account_json(credentials)

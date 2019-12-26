@@ -2,12 +2,9 @@
 % Please edit documentation in R/utils.R
 \name{gcs_cloud_auth}
 \alias{gcs_cloud_auth}
-\alias{gcs_get_cloud_auth}
 \title{Get/Set google credential file}
 \usage{
-gcs_cloud_auth(creds)
-
-gcs_get_cloud_auth()
+gcs_cloud_auth(json_file)
 }
 \arguments{
 \item{creds}{character string. A JSON file that can be used to authenticate

@@ -17,8 +17,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // get_bucket_connection
-SEXP get_bucket_connection(std::string credentials, std::string project, std::string bucket, std::string file, bool isRead, bool istext, bool UTF8, bool autoOpen, double buffLength);
-RcppExport SEXP _googleCloudStorageStream_get_bucket_connection(SEXP credentialsSEXP, SEXP projectSEXP, SEXP bucketSEXP, SEXP fileSEXP, SEXP isReadSEXP, SEXP istextSEXP, SEXP UTF8SEXP, SEXP autoOpenSEXP, SEXP buffLengthSEXP) {
+SEXP get_bucket_connection(std::string credentials, std::string project, std::string bucket, std::string file, bool isRead, bool isPublic, bool istext, bool UTF8, bool autoOpen, double buffLength, string description, string openMode);
+RcppExport SEXP _googleCloudStorageStream_get_bucket_connection(SEXP credentialsSEXP, SEXP projectSEXP, SEXP bucketSEXP, SEXP fileSEXP, SEXP isReadSEXP, SEXP isPublicSEXP, SEXP istextSEXP, SEXP UTF8SEXP, SEXP autoOpenSEXP, SEXP buffLengthSEXP, SEXP descriptionSEXP, SEXP openModeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -27,18 +27,21 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type bucket(bucketSEXP);
     Rcpp::traits::input_parameter< std::string >::type file(fileSEXP);
     Rcpp::traits::input_parameter< bool >::type isRead(isReadSEXP);
+    Rcpp::traits::input_parameter< bool >::type isPublic(isPublicSEXP);
     Rcpp::traits::input_parameter< bool >::type istext(istextSEXP);
     Rcpp::traits::input_parameter< bool >::type UTF8(UTF8SEXP);
     Rcpp::traits::input_parameter< bool >::type autoOpen(autoOpenSEXP);
     Rcpp::traits::input_parameter< double >::type buffLength(buffLengthSEXP);
-    rcpp_result_gen = Rcpp::wrap(get_bucket_connection(credentials, project, bucket, file, isRead, istext, UTF8, autoOpen, buffLength));
+    Rcpp::traits::input_parameter< string >::type description(descriptionSEXP);
+    Rcpp::traits::input_parameter< string >::type openMode(openModeSEXP);
+    rcpp_result_gen = Rcpp::wrap(get_bucket_connection(credentials, project, bucket, file, isRead, isPublic, istext, UTF8, autoOpen, buffLength, description, openMode));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_googleCloudStorageStream_C_package_onLoad", (DL_FUNC) &_googleCloudStorageStream_C_package_onLoad, 1},
-    {"_googleCloudStorageStream_get_bucket_connection", (DL_FUNC) &_googleCloudStorageStream_get_bucket_connection, 9},
+    {"_googleCloudStorageStream_get_bucket_connection", (DL_FUNC) &_googleCloudStorageStream_get_bucket_connection, 12},
     {NULL, NULL, 0}
 };
 

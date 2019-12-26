@@ -5,7 +5,7 @@ C_package_onLoad <- function(pkg_namespace) {
     invisible(.Call(`_googleCloudStorageStream_C_package_onLoad`, pkg_namespace))
 }
 
-get_bucket_connection <- function(credentials, project, bucket, file, isRead, istext, UTF8, autoOpen, buffLength) {
-    .Call(`_googleCloudStorageStream_get_bucket_connection`, credentials, project, bucket, file, isRead, istext, UTF8, autoOpen, buffLength)
+get_bucket_connection <- function(credentials, project, bucket, file, isRead, isPublic, istext, UTF8, autoOpen, buffLength, description, openMode) {
+    .Call(`_googleCloudStorageStream_get_bucket_connection`, credentials, project, bucket, file, isRead, isPublic, istext, UTF8, autoOpen, buffLength, description, openMode)
 }
 

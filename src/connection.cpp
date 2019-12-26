@@ -24,46 +24,37 @@ typedef struct bucketCon* bucketConnection;
 #define R_EOF -1
 
 struct bucketCon {
-	double connection_id = -1;
-	string credentials;
-	//NOT USED
-	string project_name;
-	string bucket_name;
-	string file_name;
+	SEXP file_url;
+	SEXP signed_url;
 	size_t file_size;
 	size_t offset;
-	SEXP stream = NULL;
+	bool isPublic;
 };
 
 
-static size_t write_connection_internal(void* target, size_t size, Rconnection con);
+static size_t write_connection_internal(void* target, size_t size, Rconnection con, bool final = false);
 
 
 static Rboolean open_connection(Rconnection con) {
 	//Rprintf("file open\n");
 	bucketConnection bc = (bucketConnection)con->myprivate;
 	if (con->canread == TRUE) {
-		List result = make_call("get_input_stream", wrap(bc->credentials), 
-			wrap(bc->bucket_name), wrap(bc->file_name));
-		
-		bc->stream = result[0];
-		bc->file_size = as<double>(result[1]);
-		R_PreserveObject(bc->stream);
+		bc->file_size = as<size_t>(make_call("get_file_size", bc->file_url));
+		bc->offset = 0;
 		con->incomplete = bc->file_size != 0 ? TRUE : FALSE;
 		con->EOF_signalled = bc->file_size == 0 ? TRUE : FALSE;
 	}
 	if (con->canwrite == TRUE) {
-		List result = make_call("get_output_stream", wrap(bc->credentials), 
-			wrap(bc->bucket_name), wrap(bc->file_name),
-			wrap(con->text == TRUE ? "text/plain" : "application/octet-stream")
-			);
-		bc->stream = result[0];
 		bc->file_size = 0;
-		R_PreserveObject(bc->stream);
+		if (bc->signed_url == R_NilValue) {
+			bc->signed_url = make_call("start_upload", bc->file_url,
+				wrap(con->text == TRUE ? "text/plain" : "application/octet-stream")
+			);
+			R_PreserveObject(bc->signed_url);
+		}
 	}
 	con->isopen = TRUE;
 	return TRUE;
-
 }
 
 
@@ -72,18 +63,14 @@ static void destroy_connection(Rconnection con) {
 	bucketConnection bc = (bucketConnection)con->myprivate;
 	//Wired behavior: No need to free the buffer since R will free it
 	//free(con->buff);
-	
-	if (bc->stream != NULL) {
-		if (con->canwrite == TRUE) {
-			if (con->buff_stored_len > 0) {
-				write_connection_internal(con->buff, con->buff_stored_len, con);
-			}
-			make_call("close_output_stream", bc->stream);
-		}
-		R_ReleaseObject(bc->stream);
+
+	if (con->canwrite == TRUE) {
+		write_connection_internal(con->buff, con->buff_stored_len, con, true);
+		make_call("stop_upload", bc->signed_url, wrap(bc->offset));
+		R_ReleaseObject(bc->signed_url);
 	}
-	
-		
+	R_ReleaseObject(bc->file_url);
+
 }
 
 
@@ -94,7 +81,7 @@ static size_t read_connection(void* target, size_t size, size_t nitems, Rconnect
 	size_t request_size = size * nitems;
 	size_t catched_size = con->buff_stored_len - con->buff_pos;
 	//Rprintf("buffer length: %lld\n", con->buff_len);
-	
+	//Rprintf("buff_pos:%lld\n", con->buff_pos);
 	size_t read_size;
 	if (catched_size >= request_size) {
 		//Try to read from buff
@@ -102,6 +89,7 @@ static size_t read_connection(void* target, size_t size, size_t nitems, Rconnect
 		con->buff_pos = con->buff_pos + request_size;
 		read_size = request_size;
 		bc->offset = bc->offset + read_size;
+
 		//Rprintf("read cache1: %lld, %lld\n", read_size, bc->offset);
 	}
 	else {
@@ -119,13 +107,12 @@ static size_t read_connection(void* target, size_t size, size_t nitems, Rconnect
 		size_t cloud_request_size = request_size - catched_size;
 		//Rprintf("cloud request size: %lld\n", cloud_request_size);
 		//The size that will be read from the cloud, the extra data will be put in the buff
-		size_t cloud_buff_size = cloud_request_size / con->buff_len * con->buff_len;
-		cloud_buff_size = cloud_buff_size >= cloud_request_size ? cloud_buff_size : (cloud_buff_size + con->buff_len);
+		size_t cloud_buff_size = cloud_request_size + con->buff_len;
 		//Check if the read is in the end of the file
 		cloud_buff_size = bc->file_size - bc->offset > cloud_buff_size ? cloud_buff_size : bc->file_size - bc->offset;
 		//Rprintf("cloud_buff_size: %lld\n", cloud_buff_size);
 		if (cloud_buff_size > 0) {
-			SEXP result = Rf_protect(make_call("read_stream", bc->stream, wrap(bc->offset), wrap(bc->offset + cloud_buff_size - 1)));
+			SEXP result = Rf_protect(make_call("download_data", bc->file_url, wrap(bc->offset), wrap(bc->offset + cloud_buff_size - 1)));
 			size_t cloud_read_size = XLENGTH(result);
 			//Rprintf("cloud_read_size: %lld\n", cloud_read_size);
 
@@ -160,19 +147,27 @@ static size_t read_connection(void* target, size_t size, size_t nitems, Rconnect
 	return read_size;
 }
 
-static size_t write_connection_internal(void* target, size_t size, Rconnection con) {
+
+
+static size_t write_connection_internal(void* target, size_t size, Rconnection con, bool final) {
 	bucketConnection bc = (bucketConnection)con->myprivate;
 	//Rprintf("begin file write:%lld bytes, off : %lld\n", size, bc->offset);
-	SEXP tempVar = Rf_protect(make_alt_raw(size, const_cast<void*>(target)));
-	make_call("write_stream", bc->stream, tempVar);
+	SEXP tempVar;
+	if (size > 0) {
+		tempVar = Rf_protect(make_alt_raw(size, const_cast<void*>(target)));
+	}
+	else {
+		tempVar = R_NilValue;
+	}
+	make_call("upload_data", bc->signed_url, tempVar, wrap(bc->offset), wrap(bc->offset + size - 1), wrap(final));
 	bc->offset = bc->offset + size;
 	//Rprintf("finish file write:%lld bytes, off : %lld\n", size, bc->offset);
-	Rf_unprotect(1);
+	if(size > 0)
+		Rf_unprotect(1);
 	return size;
 }
 
 static size_t write_connection(const void* target, size_t size, size_t nitems, Rconnection con) {
-	bucketConnection bc = (bucketConnection)con->myprivate;
 	size_t request_size = size * nitems;
 	size_t buffer_space = con->buff_len - con->buff_stored_len;
 
@@ -194,7 +189,7 @@ static size_t write_connection(const void* target, size_t size, size_t nitems, R
 
 
 static int get_byte_from_connection(Rconnection con) {
-	int x;
+	char x;
 	return read_connection(&x, 1, 1, con) ? x : R_EOF;
 }
 
@@ -230,35 +225,30 @@ static double seek_connection(Rconnection con, double where, int origin, int rw)
 }
 
 
+
+
+
 // [[Rcpp::export]]
 SEXP get_bucket_connection(std::string credentials, std::string project, std::string bucket, std::string file,
-	bool isRead, bool istext, bool UTF8, bool autoOpen, double buffLength) {
-	string openMode;
-	if (isRead && istext) {
-		openMode = "r";
-	}
-	else if (isRead && !istext) {
-		openMode = "rb";
-	}
-	else if (!isRead && istext) {
-		openMode = "w";
-	}
-	else if (!isRead && !istext) {
-		openMode = "wb";
-	}
-
+	bool isRead, bool isPublic, bool istext, bool UTF8,
+	bool autoOpen, double buffLength,
+	string description, string openMode) {
 
 	Rconnection con;
-	SEXP rc = PROTECT(R_new_custom_connection(file.c_str(),
+	SEXP rc = PROTECT(R_new_custom_connection(description.c_str(),
 		openMode.c_str(), CONNECTION_CLASS, &con));
 
 	bucketConnection bc = new bucketCon();
-	bc->project_name = project;
-	bc->bucket_name = bucket;
-	bc->file_name = file;
-	bc->credentials = credentials;
 	bc->offset = 0;
-
+	bc->isPublic = isPublic;
+	bc->signed_url = R_NilValue;
+	if (isRead) {
+		bc->file_url = make_call("download_URL", wrap(bucket), wrap(file));
+	}
+	else {
+		bc->file_url = make_call("upload_URL", wrap(bucket), wrap(file));
+	}
+	R_PreserveObject(bc->file_url);
 
 	con->incomplete = FALSE;
 	con->myprivate = bc;
@@ -279,7 +269,7 @@ SEXP get_bucket_connection(std::string credentials, std::string project, std::st
 	con->seek = seek_connection;
 	con->buff_len = buffLength;
 	//No need to free the memory after usage.
-	con->buff = (unsigned char*) malloc(con->buff_len);
+	con->buff = (unsigned char*)malloc(con->buff_len);
 	con->buff_pos = 0;
 	con->buff_stored_len = 0;
 

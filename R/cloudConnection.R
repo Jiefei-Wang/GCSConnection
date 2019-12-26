@@ -29,7 +29,6 @@ gcs_connection <-function(description, open,
                           encoding = getOption("encoding"),
            credentials = NULL,
            bucket = NULL){
-  initial_package()
   stopifnot(
     is_scalar_character_or_null(credentials),
     is_scalar_character_or_null(bucket),
@@ -40,40 +39,39 @@ gcs_connection <-function(description, open,
   
   ## get the file name and bucket name from description
   file_info <- digest_path(description,bucket)
-  description <- file_info$file
+  file <- file_info$file
   bucket <- file_info$bucket
+  description <- full_path(bucket,file)
+  
+  
   
   ## If unable to get the bucket name, use the default setting
   if(is.null(bucket)) 
     bucket <- gcs_get_global_bucket()
   
   if(is.null(credentials))
-    credentials <- gcs_get_cloud_auth_internal(useAnonymous = TRUE)
+    credentials <- get_token()
   
   
   UTF8 <- identical(encoding, "UTF8")
+  isText <- !grepl("b",open,fixed = TRUE)
+  isPublic <- grepl("p",open,fixed = TRUE)
+  isRead <- grepl("r",open,fixed = TRUE)
+  isWrite <- grepl("w",open,fixed = TRUE)
   
-  if(open%in%c("r","rt")){
-    isRead <- TRUE
-    isText <- TRUE
+  if(isRead&&isWrite){
+    stop("The connection must be in either read or write mode but not both.")
   }
-  if(open%in%c("w","wt")){
-    isRead <- FALSE
-    isText <- TRUE
-  }
-  if(open%in%c("rb")){
-    isRead <- TRUE
-    isText <- FALSE
-  }
-  if(open%in%c("wb")){
-    isRead <- FALSE
-    isText <- FALSE
-  }
+  
   if(isRead){
     bufferLength <- gcs_get_input_stream_buff()
   }else{
     bufferLength <- gcs_get_output_stream_buff()
   }
+  
+  
+    
+  
   
   autoOpen = TRUE
   project <- ""
@@ -81,10 +79,12 @@ gcs_connection <-function(description, open,
   get_bucket_connection(credentials = credentials,
                          project = project,
                          bucket = bucket,
-                         file = description,
-                         isRead = isRead, istext = isText, 
-                         UTF8 = UTF8, autoOpen = autoOpen,
-                         buffLength = bufferLength)
+                         file = file,
+                         isRead = isRead,  isPublic = isPublic,
+                        istext = isText, UTF8 = UTF8, 
+                        autoOpen = autoOpen,
+                         buffLength = bufferLength,
+                        description = description,openMode = open)
 }
     
 
