@@ -13,11 +13,14 @@ Depends:
 Imports: 
   Rcpp (>= 1.0.2),
   httr,
-  googleAuthR
+  googleAuthR,
+  googleCloudStorageR
 Suggests: 
     testthat,
     knitr,
-    rmarkdown
+    rmarkdown,
+    BiocStyle
+biocViews: Infrastructure
 LinkingTo: Rcpp
 RoxygenNote: 7.0.1
 Encoding: UTF-8

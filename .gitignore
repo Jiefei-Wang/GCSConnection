@@ -47,3 +47,6 @@ src/*.lib
 
 inst/test/
 inst/doc
+
+src-i386/
+src-x64/

@@ -3,11 +3,14 @@
 \name{gcs_cloud_auth}
 \alias{gcs_cloud_auth}
 \alias{gcs_get_cloud_auth}
+\alias{print.auth}
 \title{Get/Set google credentials}
 \usage{
-gcs_cloud_auth(json_file = NULL, gcloud = FALSE, email = NULL)
+gcs_cloud_auth(json_file, gcloud = FALSE, email = NULL)
 
 gcs_get_cloud_auth()
+
+\method{print}{auth}(x, ...)
 }
 \arguments{
 \item{json_file}{character string. A JSON file that can be used to authenticate with
@@ -16,27 +19,33 @@ Google Cloud Storage. If the value is `NULL`, the current credential will be era
 \item{gcloud}{logical. Whether use gcloud to authenticate with Google Cloud Storage.
 If the value is `TRUE`, the parameter `json_file` will be ignored.}
 
-\item{email}{Character string or NULL. For gcloud only. Account to get the access token for. 
+\item{email}{Character string or NULL. For gcloud only. Account to get the access token for.
 If not specified, the current active account in gcloud will be used.}
+
+\item{x}{Used for the S3 `print` function only}
+
+\item{...}{Used for the S3 `print` function only}
 }
 \value{
 gcs_cloud_auth : No return value
-gcs_get_cloud_auth : A list containing credentials information
+gcs_get_cloud_auth : An S3 `auth` class containing credentials information
 }
 \description{
-Authenticate with Google Cloud Storage. You can download the JSON credential 
-file from Google Gloud Platform. The credentials can be set globally by the 
-evironment variable `GOOGLE_APPLICATION_CREDENTIALS` or `GCS_AUTH_FILE`.
+Authenticate with Google Cloud Storage. You can download the JSON credential
+file from Google Gloud Platform. The package will search for the credentials
+from evironment variables `GOOGLE_APPLICATION_CREDENTIALS` or `GCS_AUTH_FILE`
+when it is onloaded. To redo the credentials initialization process
+after the package is loaded. Simply call the `gcs_cloud_auth` function
+ with no argument.
 }
 \details{
-When the package is loaded, it first searchs the credential file from the enviroment 
+When the package is loaded, it first searchs the credential file from the enviroment
 variable `GOOGLE_APPLICATION_CREDENTIALS`. If the credentials is not found, the environment variable
 `GCS_AUTH_FILE` will be used intead. If both variables are not specified. Users need to specify the
 credentials by calling `gcs_cloud_auth` function.
 }
 \examples{
-## Authenticate with a service account
-\dontrun{
-gcs_cloud_auth(json_file = "/example.json")
-}
+## Default authentication process
+gcs_cloud_auth()
+gcs_get_cloud_auth()
 }

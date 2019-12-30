@@ -4,7 +4,7 @@
 #define LLong long long int 
 
 #define TOCHAR(x) CHAR(Rf_asChar(x))
-#define CONNECTION_CLASS "googleBucket"
+#define CONNECTION_CLASS "google cloud storage"
 
 
 #define PACKAGE_NAME "GCSConnection"

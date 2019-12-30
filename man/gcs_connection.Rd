@@ -15,16 +15,19 @@ It can be either the file name or a full path to the file.}
 See details for possible values. If not specified, the default value will be
 "rb" if a credential is set or "rbp" if not.}
 
-\item{encoding}{character string. The encoding of the input/output stream of a connection. 
+\item{encoding}{character string. The encoding of the input/output stream of a connection.
 Currently the parameter `encoding` should be either `native.enc` or `UTF8`. see `?connections` for more detail.}
 
-\item{bucket}{character string. The name of the bucket that the file is located in. If not supplied, 
+\item{bucket}{character string. The name of the bucket that the file is located in. If not supplied,
 value in `gcs_get_global_bucket()` will be used. If a full path to the file is provided in `description`,
 this parameter will be ignored.}
 }
+\value{
+A connection
+}
 \description{
 This function creates an R connection to a file on google cloud storage.
-A service account credentials is required for accessing private data, the 
+A service account credentials is required for accessing private data, the
 credentials can be set via `gcs_cloud_auth`
 }
 \details{
@@ -38,12 +41,11 @@ Possible values for the argument `open` are the combination of the following cha
 access mode only works with read connections.
 }
 \examples{
-## Open for reading the public Landsat data 
+## Open for reading the public Landsat data
 ## on google cloud storage in text mode
 
 file <- "gs://genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
 con <- gcs_connection(description = file, open = "rtp")
 readLines(con, n = 4L)
 close(con)
-
 }
