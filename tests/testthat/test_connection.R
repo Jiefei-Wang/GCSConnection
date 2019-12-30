@@ -1,12 +1,13 @@
 context("Test connection")
+## clear credentials
+gcs_cloud_auth()
 
 file <-
   "gs://genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
 test_that("Public data access, text mode", {
   con <-
     gcs_connection(description = file,
-                   open = "r",
-                   credentials = "")
+                   open = "rp")
   expect_error(readLines(con), NA)
   close(con)
 })
@@ -14,8 +15,13 @@ test_that("Public data access, text mode", {
 test_that("Public data access, binary mode", {
   con <-
     gcs_connection(description = file,
-                   open = "rb",
-                   credentials = "")
+                   open = "rbp")
+  expect_error(readBin(con, raw(), n = 10L), NA)
+  close(con)
+  
+  ## Auto determine the access mode
+  con <-
+    gcs_connection(description = file)
   expect_error(readBin(con, raw(), n = 10L), NA)
   close(con)
 })
@@ -23,8 +29,7 @@ test_that("Public data access, binary mode", {
 test_that("seek connection", {
   con <-
     gcs_connection(description = file,
-                   open = "r",
-                   credentials = "")
+                   open = "rp")
   res <- readLines(con, n = 1L)
   expect_equal(seek(con, 0), nchar(res) + 1L)
   res2 <- readLines(con, n = 1L)
@@ -35,13 +40,13 @@ test_that("seek connection", {
 test_that("credential access", {
   expect_error(gcs_get_cloud_auth(), NA)
   expect_error(gcs_cloud_auth(NULL), NA)
-  expect_null(gcs_get_cloud_auth())
+  expect_error(gcs_get_cloud_auth(), NA)
 })
 
 test_that("buffer size", {
   n <- 64L
-  expect_error(gcs_input_stream_buff(n), NA)
-  expect_warning(gcs_output_stream_buff(n))
-  expect_equal(gcs_get_input_stream_buff(), n)
-  expect_false(gcs_get_output_stream_buff()==n)
+  expect_warning(gcs_read_buff(n))
+  expect_warning(gcs_write_buff(n))
+  expect_equal(gcs_get_read_buff(), n)
+  expect_false(gcs_get_write_buff()==n)
 })

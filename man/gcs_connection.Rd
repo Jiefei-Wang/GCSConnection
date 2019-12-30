@@ -4,22 +4,19 @@
 \alias{gcs_connection}
 \title{Connection to google cloud storage}
 \usage{
-gcs_connection(description, open, encoding = getOption("encoding"),
-  credentials = NULL, bucket = NULL)
+gcs_connection(description, open = "",
+  encoding = getOption("encoding"), bucket = NULL)
 }
 \arguments{
 \item{description}{character string. The name of the file that you want to connect to.
 It can be either the file name or a full path to the file.}
 
 \item{open}{character string. A description of how to open the connection.
-See `?connections` for possible values.}
+See details for possible values. If not specified, the default value will be
+"rb" if a credential is set or "rbp" if not.}
 
-\item{encoding}{character string. The character encoding. Currently only support either `Unicode`
-or `UTF8`}
-
-\item{credentials}{character string. A file path to the JSON credentials. If not supplied, the default
-value in `gcs_get_cloud_auth()` will be used. If the credentials is an empty string(AKA ""), an anonymous 
-credentials will be supplied.}
+\item{encoding}{character string. The encoding of the input/output stream of a connection. 
+Currently the parameter `encoding` should be either `native.enc` or `UTF8`. see `?connections` for more detail.}
 
 \item{bucket}{character string. The name of the bucket that the file is located in. If not supplied, 
 value in `gcs_get_global_bucket()` will be used. If a full path to the file is provided in `description`,
@@ -27,14 +24,26 @@ this parameter will be ignored.}
 }
 \description{
 This function creates an R connection to a file on google cloud storage.
+A service account credentials is required for accessing private data, the 
+credentials can be set via `gcs_cloud_auth`
+}
+\details{
+Possible values for the argument `open` are the combination of the following characters:
+
+"r" or "w" : read or write mode. The GCS connection cannot be in both read and write modes.
+
+"t" or "b" : text or binary mode. If not specified, the default is text mode.
+
+"p": Public data access mode. If specified, Credentials is not required. The public data
+access mode only works with read connections.
 }
 \examples{
-## Connect to the Landsat data on google cloud storage
-## This is a public dataset so there is no need to provide
-## credentials.
+## Open for reading the public Landsat data 
+## on google cloud storage in text mode
+
 file <- "gs://genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
-con <- gcs_connection(description = file, open = "r", credentials = "")
-readLines(con, n = 1L)
+con <- gcs_connection(description = file, open = "rtp")
+readLines(con, n = 4L)
 close(con)
 
 }

@@ -12,7 +12,7 @@ vignette: >
   %\VignetteIndexEntry{quickStart}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-package: googleCloudStorageStream
+package: GCSConnection
 ---
 
 
@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-library(googleCloudStorageStream)
+library(GCSConnection)
 ```
 
 #Getting started
@@ -33,7 +33,7 @@ pip install --upgrade google-resumable-media
 ```
 Alternatively, you may want to install the packages in a virtual or Conda environment. It can be done by calling
 ```
-googleCloudStorageStream::install_python_dependencies(method = "auto", conda = "auto")
+GCSConnection::install_python_dependencies(method = "auto", conda = "auto")
 ```
 
 

@@ -12,25 +12,31 @@ upload_URL<-function(bucket, file){
 
 
 get_range<-function(start,end){
-  paste0("bytes=",start,"-",end- 1L)
+  paste0("bytes=",start,"-",end)
 }
 
 
-bucket = "bioconductor_test"
-file = "connection_test1.txt"
-url =upload_URL(bucket,file)
-download_data<-function(url, start, end){
+#bucket = "bioconductor_test"
+#file = "connection_test1.txt"
+#url =upload_URL(bucket,file)
+download_data<-function(url, start, end, isPublic){
+  if(isPublic)
+    auth = NULL
+  else
+    auth = get_token()
+  
   r <- GET(url,
            add_headers(
-             Authorization = get_token(),
+             Authorization = auth,
              range=get_range(start,end)
            )
   )
-  # r$status_code
-  # r$url
-  # http_status(r)
+  if(status_code(r) == 403){
+    stop("An error has occured when reading from the connection\n",
+         "It seems like you are not authorized, please set your credential via `gcs_cloud_auth`")
+  }
   stop_for_status(r)
-  content(r)
+  content(r,as = "raw")
 }
 
 #upload_URL(bucket,file)
@@ -41,6 +47,10 @@ start_upload <- function(url, content_type = "application/octet-stream"){
              `X-Upload-Content-Type` = content_type
            )
   )
+  if(status_code(r) == 401){
+    stop("An error has occured when writing to the connection\n",
+         "It seems like you are not authorized, please set your credential via `gcs_cloud_auth`")
+  }
   stop_for_status(r)
   headers(r)$location
 }
@@ -88,6 +98,10 @@ get_file_size <-function(url){
   r <- HEAD(url,add_headers(
     Authorization = get_token()
   ))
+  if(status_code(r) == 403){
+    stop("An error has occured when reading from the connection\n",
+         "It seems like you are not authorized, please set your credential via `gcs_cloud_auth`")
+  }
   stop_for_status(r)
   as.double(headers(r)$`content-length`)
 }

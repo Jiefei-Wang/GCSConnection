@@ -2,13 +2,26 @@
 % Please edit documentation in R/utils.R
 \name{gcs_cloud_auth}
 \alias{gcs_cloud_auth}
-\title{Get/Set google credential file}
+\alias{gcs_get_cloud_auth}
+\title{Get/Set google credentials}
 \usage{
-gcs_cloud_auth(json_file)
+gcs_cloud_auth(json_file = NULL, gcloud = FALSE, email = NULL)
+
+gcs_get_cloud_auth()
 }
 \arguments{
-\item{creds}{character string. A JSON file that can be used to authenticate
-Google Cloud Storage.}
+\item{json_file}{character string. A JSON file that can be used to authenticate with
+Google Cloud Storage. If the value is `NULL`, the current credential will be erased.}
+
+\item{gcloud}{logical. Whether use gcloud to authenticate with Google Cloud Storage.
+If the value is `TRUE`, the parameter `json_file` will be ignored.}
+
+\item{email}{Character string or NULL. For gcloud only. Account to get the access token for. 
+If not specified, the current active account in gcloud will be used.}
+}
+\value{
+gcs_cloud_auth : No return value
+gcs_get_cloud_auth : A list containing credentials information
 }
 \description{
 Authenticate with Google Cloud Storage. You can download the JSON credential 
@@ -22,6 +35,8 @@ variable `GOOGLE_APPLICATION_CREDENTIALS`. If the credentials is not found, the 
 credentials by calling `gcs_cloud_auth` function.
 }
 \examples{
-## Get the default credential file
-gcs_get_cloud_auth()
+## Authenticate with a service account
+\dontrun{
+gcs_cloud_auth(json_file = "/example.json")
+}
 }

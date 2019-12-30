@@ -1,4 +1,4 @@
-#' @useDynLib googleCloudStorageStream, .registration = TRUE
+#' @useDynLib GCSConnection, .registration = TRUE
 #' @import googleCloudStorageR
 #' @importFrom  googleAuthR gar_auth_service
 #' @import httr
@@ -15,7 +15,7 @@ NULL
     if(creds!="")
       gcs_cloud_auth(creds)
   }
-  pkg_namespace <- getNamespace("googleCloudStorageStream")
+  pkg_namespace <- getNamespace("GCSConnection")
   C_package_onLoad(pkg_namespace)
 }
 

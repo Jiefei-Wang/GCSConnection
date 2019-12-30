@@ -112,7 +112,7 @@ static size_t read_connection(void* target, size_t size, size_t nitems, Rconnect
 		cloud_buff_size = bc->file_size - bc->offset > cloud_buff_size ? cloud_buff_size : bc->file_size - bc->offset;
 		//Rprintf("cloud_buff_size: %lld\n", cloud_buff_size);
 		if (cloud_buff_size > 0) {
-			SEXP result = Rf_protect(make_call("download_data", bc->file_url, wrap(bc->offset), wrap(bc->offset + cloud_buff_size - 1)));
+			SEXP result = Rf_protect(make_call("download_data", bc->file_url, wrap(bc->offset), wrap(bc->offset + cloud_buff_size - 1), wrap(bc->isPublic)));
 			size_t cloud_read_size = XLENGTH(result);
 			//Rprintf("cloud_read_size: %lld\n", cloud_read_size);
 
@@ -157,7 +157,10 @@ static size_t write_connection_internal(void* target, size_t size, Rconnection c
 		tempVar = Rf_protect(make_alt_raw(size, const_cast<void*>(target)));
 	}
 	else {
-		tempVar = R_NilValue;
+		if (final)
+			tempVar = R_NilValue;
+		else
+			return 0;
 	}
 	make_call("upload_data", bc->signed_url, tempVar, wrap(bc->offset), wrap(bc->offset + size - 1), wrap(final));
 	bc->offset = bc->offset + size;
@@ -170,15 +173,25 @@ static size_t write_connection_internal(void* target, size_t size, Rconnection c
 static size_t write_connection(const void* target, size_t size, size_t nitems, Rconnection con) {
 	size_t request_size = size * nitems;
 	size_t buffer_space = con->buff_len - con->buff_stored_len;
-
+	//Rprintf("request size:%lld\n", request_size);
 	if (buffer_space > request_size) {
 		memcpy((char*)con->buff + con->buff_stored_len, target, request_size);
 		con->buff_stored_len = con->buff_stored_len + request_size;
+		//Rprintf("write to buff, write size: %lld, stored length:%lld\n", request_size, con->buff_stored_len);
 	}
 	else {
-		write_connection_internal(con->buff, con->buff_stored_len, con);
-		write_connection_internal(const_cast<void*>(target), request_size, con);
-		con->buff_stored_len = 0;
+		size_t offset = 0;
+		while (request_size - offset >= buffer_space) {
+			size_t empty_buff_size = con->buff_len - con->buff_stored_len;
+			memcpy((char*)con->buff + con->buff_stored_len, (char*)target + offset, empty_buff_size);
+			offset = offset + empty_buff_size;
+			write_connection_internal(con->buff, con->buff_len, con);
+			con->buff_stored_len = 0;
+			buffer_space = con->buff_len;
+			//Rprintf("write to buff and upload, write size: %lld, offset: %lld\n", empty_buff_size, offset);
+		}
+		memcpy(con->buff, (char*)target + offset, request_size - offset);
+		con->buff_stored_len = request_size - offset;
 	}
 
 	return size * nitems;
@@ -229,7 +242,7 @@ static double seek_connection(Rconnection con, double where, int origin, int rw)
 
 
 // [[Rcpp::export]]
-SEXP get_bucket_connection(std::string credentials, std::string project, std::string bucket, std::string file,
+SEXP get_bucket_connection(std::string bucket, std::string file,
 	bool isRead, bool isPublic, bool istext, bool UTF8,
 	bool autoOpen, double buffLength,
 	string description, string openMode) {

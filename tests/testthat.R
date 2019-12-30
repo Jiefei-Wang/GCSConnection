@@ -1,4 +1,4 @@
 library(testthat)
-library(googleCloudStorageStream)
+library(GCSConnection)
 
-test_check("googleCloudStorageStream")
+test_check("GCSConnection")

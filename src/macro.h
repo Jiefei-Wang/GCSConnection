@@ -7,7 +7,7 @@
 #define CONNECTION_CLASS "googleBucket"
 
 
-#define PACKAGE_NAME "googleCloudStorageStream"
+#define PACKAGE_NAME "GCSConnection"
 #define PACKAGE_ENV_NAME "namespace:" PACKAGE_NAME
 #define PACKAGE_NAMESPACE R_FindNamespace(Rf_mkString(PACKAGE_NAME))
 
