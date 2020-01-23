@@ -28,6 +28,7 @@ If not specified, the current active account in gcloud will be used.}
 }
 \value{
 gcs_cloud_auth : No return value
+
 gcs_get_cloud_auth : An S3 `auth` class containing credentials information
 }
 \description{

@@ -104,6 +104,7 @@ get_credentials_from_environment <- function() {
 #' @rdname authentication
 #' @return
 #' gcs_cloud_auth : No return value
+#' 
 #' gcs_get_cloud_auth : An S3 `auth` class containing credentials information
 #' @examples
 #' ## Default authentication process
@@ -124,9 +125,17 @@ gcs_cloud_auth <- function(json_file,
             json_file <- get_credentials_from_environment()
         }
         if (!is.null(json_file)) {
+            tryCatch({
             package_settings[["credentials"]] <-
                 googleAuthR::gar_auth_service(json_file = json_file,
                                               scope = scope)
+            },
+            warning = function(w) warning("Do the authentication with the following warning:\n",
+                                            w),
+            error = function(e) warning("Fail to do the authentication with the following message:\n",
+                                          e)
+            
+            )
         } else{
             package_settings[["credentials"]] <- NULL
         }
