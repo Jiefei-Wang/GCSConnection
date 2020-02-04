@@ -8,10 +8,32 @@ package_settings[["gcloud_token_time"]] <- NULL
 package_settings[["input_buff_len"]] <- 1024L * 1024L
 package_settings[["output_buff_len"]] <- 1024L * 1024L
 
+myCeiling<-function(x,digits){
+    ceiling(x*10^digits)/10^digits
+}
 
+## Convert size in byte to a character format for print
+printable_size <-function(size_list){
+    result <- rep("",length(size_list))
+    ind <- size_list<10^3
+    result[ind] <- paste0(size_list[ind],"B")
+    ind <- size_list>=10^3&size_list<10^6
+    result[ind] <- paste0(myCeiling(size_list[ind]/10^3,digit=1),"KB")
+    ind <- size_list>=10^6&size_list<10^9
+    result[ind] <- paste0(myCeiling(size_list[ind]/10^6,digit=1),"MB")
+    ind <- size_list>=10^9&size_list<10^12
+    result[ind] <- paste0(myCeiling(size_list[ind]/10^9,digit=1),"GB")
+    ind <- size_list>=10^12
+    result[ind] <- paste0(myCeiling(size_list[ind]/10^12,digit=1),"TB")
+    result
+}
 
-digest_path <- function(description, bucket) {
-    if (grepl("gs://", description, fixed = TRUE)) {
+is_google_uri <- function(x){
+    nchar(x)>=5 && substr(x,1,5)=="gs://"
+}
+
+digest_path <- function(description, bucket = NULL) {
+    if (is_google_uri(description)) {
         bucket <- strsplit(description, "/")[[1]][3]
         file <- sub(paste0("gs://", bucket, "/"), "", description)
     } else{
@@ -96,7 +118,7 @@ get_credentials_from_environment <- function() {
 #' @param email Character string or NULL. For gcloud only. Account to get the access token for.
 #' If not specified, the current active account in gcloud will be used.
 #' @details
-#' When the package is loaded, it first searchs the credential file from the enviroment
+#' When the package is loaded, it first searches the credential file from the enviroment
 #' variable `GOOGLE_APPLICATION_CREDENTIALS`. If the credentials is not found, the environment variable
 #' `GCS_AUTH_FILE` will be used intead. If both variables are not specified. Users need to specify the
 #' credentials by calling `gcs_cloud_auth` function.
@@ -194,17 +216,17 @@ print.auth <- function(x, ...) {
 #' gcs_get_write_buff()
 #' @rdname buffer_size
 #' @export
-gcs_read_buff <- function(buff_size = 1024L * 1024L) {
+gcs_set_read_buff <- function(buff_size = 1024L * 1024L) {
     old_size <- package_settings[["input_buff_len"]]
     if (buff_size < 256 * 1024) {
         warning("The buffer size is too small, it may impact the performance")
     }
     package_settings[["input_buff_len"]] <- as.integer(buff_size)
-    old_size
+    invisible(old_size)
 }
 #' @rdname buffer_size
 #' @export
-gcs_write_buff <- function(buff_size = 1024L * 1024L) {
+gcs_set_write_buff <- function(buff_size = 1024L * 1024L) {
     old_size <- package_settings[["output_buff_len"]]
     buff_size <- as.integer(buff_size)
     if (buff_size < 256 * 1024) {
@@ -212,7 +234,7 @@ gcs_write_buff <- function(buff_size = 1024L * 1024L) {
         buff_size <- 256L * 1024L
     }
     package_settings[["output_buff_len"]] <- as.integer(buff_size)
-    old_size
+    invisible(old_size)
 }
 #' @rdname buffer_size
 #' @export
@@ -224,3 +246,28 @@ gcs_get_read_buff <- function() {
 gcs_get_write_buff <- function() {
     package_settings[["output_buff_len"]]
 }
+
+
+
+standardize_file_info<-function(bucket,file,file_info = NULL, file_header = NULL){
+    if(!is.null(file_info)){
+    list(
+        bucket = bucket,
+        file = file,
+        size = as.numeric(file_info$Size),
+        URI = full_path(bucket,file),
+        LastModified = file_info$LastModified
+    )
+    }else{
+        list(
+            bucket = bucket,
+            file = file,
+            size = as.numeric(file_header$`content-length`),
+            URI = full_path(bucket,file),
+            LastModified = file_header$`last-modified`
+        )
+    }
+}
+
+
+

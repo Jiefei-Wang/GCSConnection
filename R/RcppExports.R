@@ -5,7 +5,7 @@ C_package_onLoad <- function(pkg_namespace) {
     invisible(.Call(`_GCSConnection_C_package_onLoad`, pkg_namespace))
 }
 
-get_bucket_connection <- function(bucket, file, isRead, isPublic, istext, UTF8, autoOpen, buffLength, description, openMode) {
-    .Call(`_GCSConnection_get_bucket_connection`, bucket, file, isRead, isPublic, istext, UTF8, autoOpen, buffLength, description, openMode)
+get_bucket_connection <- function(bucket, file, isRead, istext, UTF8, autoOpen, buffLength, description, openMode) {
+    .Call(`_GCSConnection_get_bucket_connection`, bucket, file, isRead, istext, UTF8, autoOpen, buffLength, description, openMode)
 }
 

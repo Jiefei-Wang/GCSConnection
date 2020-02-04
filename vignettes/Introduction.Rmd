@@ -24,7 +24,7 @@ knitr::opts_chunk$set(
 library(GCSConnection)
 ```
 # Credentials
-
+## Auto authentication
 You need to have a service account credentials to authenticate 
 with Google Cloud Storage API. The credentials determines which data sources
 are accessable to you. Please follow the instructions on [Google
@@ -33,13 +33,22 @@ your local machine. The package will search for the credentials file from
 the environment variable `GOOGLE_APPLICATION_CREDENTIALS` when it is
 loaded. If it fails to find the credentials, it will look for the
 environment variable `GCS_AUTH_FILE` instead. If both environment
-variables are empty, you need to manually provide the credentials by
-calling `gcs_cloud_auth`. 
+variables are empty, you will only be able to access public data. If you set the environment variables after the package is loaded, you can redo the authentication by `gcs_cloud_auth()`.
+
+## Manual authentication
+The function `gcs_cloud_auth` provides two ways to authenticate with Google Cloud. When you have a service account credentials, you can authenticate with Google Cloud by calling `gcs_cloud_auth(credentials_file_path)`. The second method is to get credentials from [Cloud SDK][]. The package is able to interact with the command-line tool gcloud. Once the account has been set in the `gcloud` program, the package can be authenticated by `gcs_cloud_auth(gcloud = TRUE)`. By default, the package will use the first account in gcloud to authenticate with Google. If there are multiple accounts in gcloud, you can switch the account by `gcs_cloud_auth(gcloud = TRUE, email = "your email address")`. 
+
+## Anouymous access
+Not all the cloud buckets require a credentials to access. You can read public data without authenticating with Google. By default, if the package fails to find the credentials from the environment variables, the package will use anouymous access method to query data from google cloud. Otherwise, you can switch to the anouymous mode by calling `gcs_cloud_auth(json_file = NULL)`. An error message will be shown if the access is denied.
+
+
 
 Once the credentials is set, you can check your token and authenticate type via:
 ```{r}
 gcs_get_cloud_auth()
 ```
+
+[Cloud SDK]: https://cloud.google.com/sdk/
 
 [Google Authentication]: https://cloud.google.com/docs/authentication/production
 

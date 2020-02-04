@@ -28,7 +28,6 @@ struct bucketCon {
 	SEXP signed_url;
 	size_t file_size;
 	size_t offset;
-	bool isPublic;
 };
 
 
@@ -112,7 +111,7 @@ static size_t read_connection(void* target, size_t size, size_t nitems, Rconnect
 		cloud_buff_size = bc->file_size - bc->offset > cloud_buff_size ? cloud_buff_size : bc->file_size - bc->offset;
 		//Rprintf("cloud_buff_size: %lld\n", cloud_buff_size);
 		if (cloud_buff_size > 0) {
-			SEXP result = Rf_protect(make_call("download_data", bc->file_url, wrap(bc->offset), wrap(bc->offset + cloud_buff_size - 1), wrap(bc->isPublic)));
+			SEXP result = Rf_protect(make_call("download_data", bc->file_url, wrap(bc->offset), wrap(bc->offset + cloud_buff_size - 1)));
 			size_t cloud_read_size = XLENGTH(result);
 			//Rprintf("cloud_read_size: %lld\n", cloud_read_size);
 
@@ -243,7 +242,7 @@ static double seek_connection(Rconnection con, double where, int origin, int rw)
 
 // [[Rcpp::export]]
 SEXP get_bucket_connection(std::string bucket, std::string file,
-	bool isRead, bool isPublic, bool istext, bool UTF8,
+	bool isRead, bool istext, bool UTF8,
 	bool autoOpen, double buffLength,
 	string description, string openMode) {
 
@@ -253,7 +252,6 @@ SEXP get_bucket_connection(std::string bucket, std::string file,
 
 	bucketConnection bc = new bucketCon();
 	bc->offset = 0;
-	bc->isPublic = isPublic;
 	bc->signed_url = R_NilValue;
 	if (isRead) {
 		bc->file_url = make_call("download_URL", wrap(bucket), wrap(file));

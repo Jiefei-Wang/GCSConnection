@@ -3,11 +3,12 @@
 #' @importFrom  googleAuthR gar_auth_service
 #' @import httr
 #' @import Rcpp
+#' @importFrom XML xmlToList xmlParse 
 NULL
 
 
 .onLoad <- function(libname, pkgname) {
     gcs_cloud_auth()
-    pkg_namespace <- getNamespace("GCSConnection")
+    pkg_namespace <- getNamespace(pkgname)
     C_package_onLoad(pkg_namespace)
 }

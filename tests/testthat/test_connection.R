@@ -15,7 +15,7 @@ test_that("Public data access, text mode", {
 test_that("Public data access, binary mode", {
   con <-
     gcs_connection(description = file,
-                   open = "rbp")
+                   open = "rb")
   expect_error(readBin(con, raw(), n = 10L), NA)
   close(con)
   
@@ -45,8 +45,8 @@ test_that("credential access", {
 
 test_that("buffer size", {
   n <- 64L
-  expect_warning(gcs_read_buff(n))
-  expect_warning(gcs_write_buff(n))
+  expect_warning(gcs_set_read_buff(n))
+  expect_warning(gcs_set_write_buff(n))
   expect_equal(gcs_get_read_buff(), n)
   expect_false(gcs_get_write_buff()==n)
 })

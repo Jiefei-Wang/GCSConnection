@@ -40,7 +40,7 @@ after the package is loaded. Simply call the `gcs_cloud_auth` function
  with no argument.
 }
 \details{
-When the package is loaded, it first searchs the credential file from the enviroment
+When the package is loaded, it first searches the credential file from the enviroment
 variable `GOOGLE_APPLICATION_CREDENTIALS`. If the credentials is not found, the environment variable
 `GCS_AUTH_FILE` will be used intead. If both variables are not specified. Users need to specify the
 credentials by calling `gcs_cloud_auth` function.

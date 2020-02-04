@@ -5,14 +5,17 @@ Version: 0.99.0
 Date: 2019-10-24
 Author: Jiefei Wang
 Maintainer: Jiefei Wang <szwjf08@gmail.com>
-Description: The package can create R connections with files on google cloud storage.
-  Both read and write connections are supported. 
+Description: 
+  Create R 'connection' objects to google cloud storage
+  buckets using the Google REST interface. Both read and write
+  connections are supported. 
 License: GPL (>= 2)
 Depends: 
   R (>= 3.6.0)
 Imports: 
   Rcpp (>= 1.0.2),
   httr,
+  XML,
   googleAuthR,
   googleCloudStorageR
 Suggests: 
@@ -24,6 +27,4 @@ biocViews: Infrastructure
 LinkingTo: Rcpp
 RoxygenNote: 7.0.1
 Encoding: UTF-8
-systemDependencies: 
-  python 3 with package google-cloud-storage and google-resumable-media installed
 VignetteBuilder: knitr
