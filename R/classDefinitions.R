@@ -1,5 +1,5 @@
 #' Folder class
-#' 
+#'  
 #' view and access files. The Folder class object can be accessed
 #'  via `$` and `[[` operators.
 #' 
