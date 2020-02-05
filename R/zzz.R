@@ -4,6 +4,7 @@
 #' @import httr
 #' @import Rcpp
 #' @importFrom XML xmlToList xmlParse 
+#' @importFrom methods setClass setMethod new
 NULL
 
 

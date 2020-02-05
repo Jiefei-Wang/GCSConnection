@@ -53,14 +53,14 @@ gcs_get_cloud_auth()
 [Google Authentication]: https://cloud.google.com/docs/authentication/production
 
 
-# Connections
+# Manually create connections
 
 Creating a connection to a file on a Google Cloud bucket is simple,
 simply provide the URL using . Below is an example to create a read
 connection with a public dataset on Google Cloud Platform.
 ```{r}
 file <- "gs://genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
-con <- gcs_connection(description = file, open = "rp")
+con <- gcs_connection(description = file, open = "r")
 readLines(con, n = 4L)
 close(con)
 ```
@@ -73,7 +73,7 @@ individually. For example:
 file_name <- "NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
 bucket_name <- "genomics-public-data"
 con <- gcs_connection(
-    description = file_name, open = "rp", bucket = bucket_name
+    description = file_name, open = "r", bucket = bucket_name
 )
 readLines(con, n = 4L)
 close(con)
@@ -91,6 +91,37 @@ It always starts in the beginning of the file. If there exist a file
 with the same name, the old file will be deleted. After the write connection is closed, the file will become immutable and no further change on the file 
 data can be made.
 
+# create connections from file manager
+Besides manually creating a connection, the package provides a simple and convinent  S4 class to manage the files. You can list all files in a bucket/folder by
+```{r}
+x <- gcs_dir("genomics-public-data/")
+x
+```
+Note that for listing files in a bucket, the last `/` symbol is not required. However, if you want to list files in a folder inside a bucket, you must include the `/` symbol. In fact, there is no hierarchical structure in a bucket, all files are in the same level. By using the slash delimiter, you can make the files appear as though they are sotred in folders. You can also change the delimiter by changing the argument `delimiter` in the function `gcs_dir`.
+
+Once obtaining a list of files, you can view the detail of a file through `$` operator
+```{r}
+x$`NA12878.chr20.sample.DeepVariant-0.7.2.vcf`
+```
+
+The connection can be made by
+```{r}
+con <- x$`NA12878.chr20.sample.DeepVariant-0.7.2.vcf`$get_connection(open = "r")
+con
+close(con)
+```
+You can also query files info, copy, delete files through the file object
+```{r}
+x$`NA12878.chr20.sample.DeepVariant-0.7.2.vcf`$file_name
+#x$`NA12878.chr20.sample.DeepVariant-0.7.2.vcf`$copy_to(destination)
+#x$`NA12878.chr20.sample.DeepVariant-0.7.2.vcf`$delete()
+```
+Note that you cannot delete a folder since beforementioned file hierarchy issue. Once all files in a folder has been deleted, the folder will be removed. If you want to update the file list after doing inserting or deleting operation, you can refresh the list by
+```{r}
+x <- x$`#refresh_list#`()
+```
+
+
 # Buffer size
 
 For reducing the number of network requests and speeding up the performance 
@@ -102,4 +133,5 @@ gcs_get_read_buff()
 gcs_get_write_buff()
 ```
 Please note the minimum buffer size for a write connection is 256 Kb. Creating a connection with small buffer size may impact the performance.
+
 

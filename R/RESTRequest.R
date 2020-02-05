@@ -7,16 +7,28 @@ catch_error<-function(r){
         )
     }
     stop_for_status(r)
+    invisible(r)
 }
 
 
 
-download_URL <- function(bucket, file) {
-    #paste0("https://",bucket,".storage.googleapis.com/",file)
-    paste0("https://storage.googleapis.com/", bucket, "/", file)
+JSON_URL <- function(bucket, file = NULL) {
+    if(is.null(file)){
+        paste0("https://storage.googleapis.com/", bucket)
+    }else{
+        paste0("https://storage.googleapis.com/", bucket, "/", file)
+    }
+}
+XML_URL <- function(bucket, file = NULL) {
+    if(is.null(file)){
+        paste0("https://",bucket,".storage.googleapis.com/")
+    }else{
+        paste0("https://",bucket,".storage.googleapis.com/",file)
+    }
 }
 
-upload_URL <- function(bucket, file, resumable = TRUE) {
+
+JSON_upload_URL <- function(bucket, file, resumable = TRUE) {
     if(resumable)
         upload_type <- "resumable"
     else
@@ -42,7 +54,7 @@ download_data <- function(url, start, end) {
     r <- GET(url,
              add_headers(Authorization = auth,
                          range = get_range(start, end)))
-   
+    
     catch_error(r)
     content(r, as = "raw")
 }
@@ -124,7 +136,7 @@ get_current_range <- function(signed_url) {
 copy_data_on_cloud <- function(from, to){
     auth <- get_token()
     from_ul <- paste0(from$bucket,"/",from$file)
-    to_url <- download_URL(to$bucket, to$file)
+    to_url <- JSON_URL(to$bucket, to$file)
     r <- PUT(
         to_url,
         add_headers(
@@ -138,8 +150,8 @@ copy_data_on_cloud <- function(from, to){
 
 
 download_data_to_disk <- function(bucket, file , disk_path){
-    url <- download_URL(bucket,file)
-     auth <- get_token()
+    url <- JSON_URL(bucket,file)
+    auth <- get_token()
     
     r <- GET(url,
              add_headers(Authorization = auth),
@@ -154,22 +166,22 @@ download_data_to_disk <- function(bucket, file , disk_path){
 }
 
 upload_data_from_disk <- function(disk_path, bucket, file){
-    url <- upload_URL(bucket, file, resumable = FALSE)
+    url <- JSON_upload_URL(bucket, file, resumable = FALSE)
     r <- POST(
         url,
         add_headers(
             Authorization = get_token()
         ),
-        body = upload_file("test.txt")
+        body = upload_file(disk_path)
     )
     catch_error(r)
 }
 
-list_files <-function(bucket,max_files){
-    url <- paste0("https://storage.googleapis.com/",bucket)
-    if(!is.null(max_files)){
-        url=paste0(url,"/?max-keys=",max_files)
-    }
+
+#file_path: either a folder path or a file directory
+list_files <-function(bucket,file_path,delimiter = "/"){
+    url <- JSON_URL(bucket)
+    url=paste0(url,"/?delimiter=",delimiter,"&prefix=",file_path)
     auth <- get_token()
     r <- GET (
         url,
@@ -178,14 +190,20 @@ list_files <-function(bucket,max_files){
         )
     )
     catch_error(r)
-    files <- XML::xmlToList(xmlParse(content(r)))
-    files <- files[names(files)=="Contents"]
-    lapply(files,function(x)
-        standardize_file_info(bucket,x$Key,file_info = x))
+    query_result <- XML::xmlToList(xmlParse(content(r)))
+    files <- query_result[names(query_result)=="Contents"]
+    file_names <- vapply(files, function(x) x$Key, character(1),USE.NAMES =FALSE)
+    file_sizes <- vapply(files, function(x) x$Size, character(1),USE.NAMES =FALSE)
+    folders <- query_result[names(query_result)=="CommonPrefixes"]
+    folder_names <- vapply(folders,function(x) x$Prefix, character(1),USE.NAMES =FALSE)
+    
+    list(file_names = file_names, 
+         file_sizes = file_sizes,
+         folder_names = folder_names)
 }
 
 get_file_meta <- function(bucket,file){
-    url<-download_URL(bucket,file)
+    url<-JSON_URL(bucket,file)
     auth <- get_token()
     r <- HEAD (
         url,
@@ -195,11 +213,11 @@ get_file_meta <- function(bucket,file){
     )
     catch_error(r)
     file_header <- headers(r)
-    standardize_file_info(bucket,file,file_header = file_header)
+    file_header
 }
 
 delete_file<-function(bucket,file){
-    url<-download_URL(bucket,file)
+    url<-JSON_URL(bucket,file)
     auth <- get_token()
     r <- DELETE(
         url,

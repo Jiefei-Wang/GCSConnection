@@ -254,10 +254,10 @@ SEXP get_bucket_connection(std::string bucket, std::string file,
 	bc->offset = 0;
 	bc->signed_url = R_NilValue;
 	if (isRead) {
-		bc->file_url = make_call("download_URL", wrap(bucket), wrap(file));
+		bc->file_url = make_call("JSON_URL", wrap(bucket), wrap(file));
 	}
 	else {
-		bc->file_url = make_call("upload_URL", wrap(bucket), wrap(file));
+		bc->file_url = make_call("JSON_upload_URL", wrap(bucket), wrap(file));
 	}
 	R_PreserveObject(bc->file_url);
 
