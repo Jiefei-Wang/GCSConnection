@@ -37,7 +37,7 @@ setMethod("show", signature("FolderClass"), function(object){
         .full_path(object),"`:\n",sep ="")
   }else{
     cat(n_file, " items in the folder `",
-        paste0(.full_path(object),collapse = .delimiter(object)),
+        .full_single_char_path(object),
         "`:\n",sep ="")
   }
   cat("--------------------\n")

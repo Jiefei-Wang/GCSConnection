@@ -2,6 +2,10 @@
 ## Folder class utils
 ##########################################
 .full_path<-function(x)x@full_path
+.full_single_char_path<-function(x){
+    path <- .full_path(x)
+    paste0(path[1],paste0(path[-1],collapse = .delimiter(x)),collapse = "/")
+}
 .file_types<-function(x) x@file_types
 .file_names<-function(x)x@file_names
 .file_sizes<-function(x)x@file_sizes

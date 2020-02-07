@@ -135,7 +135,7 @@ gcs_cp <- function(from, to){
 #' 
 #' @param path Character(1), the path to the bucket/folder/file,
 #' seperated by `delimiter`. 
-#' @param delimiter Character(1), A character or multiple characters that
+#' @param delimiter Character(1), A character that
 #' can be used to determine the naming scheme of the directory. 
 #' @param recursive Logical(1), whether recursively query all subdirectory.
 #' If TRUE, all information of the subdirectories will be downloaded. The 
@@ -149,6 +149,7 @@ gcs_cp <- function(from, to){
 #' @export
 gcs_dir<-function(path, delimiter =  "/",recursive=FALSE,deep=2L){
     full_path <- unlist(strsplit(path,delimiter,fixed=TRUE))
+    full_path <- c(unlist(strsplit(full_path[1],"/",fixed=TRUE)),full_path[-1])
     if(substring(path,nchar(path)-nchar(delimiter)+1)==delimiter||length(full_path)==1){
         .makeFolderClass(full_path=full_path,
                          delimiter=delimiter,

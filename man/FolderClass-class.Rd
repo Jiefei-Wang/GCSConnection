@@ -4,8 +4,13 @@
 \name{FolderClass-class}
 \alias{FolderClass-class}
 \alias{.FolderClass}
-\title{Folder class}
+\title{Folder class
+ 
+view and access files. The Folder class object can be accessed
+ via `$` and `[[` operators.}
 \description{
+Folder class
+ 
 view and access files. The Folder class object can be accessed
  via `$` and `[[` operators.
 }

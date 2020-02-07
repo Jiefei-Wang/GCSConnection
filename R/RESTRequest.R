@@ -13,22 +13,28 @@ catch_error<-function(r){
 
 
 JSON_URL <- function(bucket, file = NULL) {
+    bucket <- URLencode(bucket)
     if(is.null(file)){
         paste0("https://storage.googleapis.com/", bucket)
     }else{
+        file <- URLencode(file)
         paste0("https://storage.googleapis.com/", bucket, "/", file)
     }
 }
 XML_URL <- function(bucket, file = NULL) {
+    bucket <- URLencode(bucket)
     if(is.null(file)){
         paste0("https://",bucket,".storage.googleapis.com/")
     }else{
+        file <- URLencode(file)
         paste0("https://",bucket,".storage.googleapis.com/",file)
     }
 }
 
 
 JSON_upload_URL <- function(bucket, file, resumable = TRUE) {
+    bucket <- URLencode(bucket)
+    file <- URLencode(file)
     if(resumable)
         upload_type <- "resumable"
     else

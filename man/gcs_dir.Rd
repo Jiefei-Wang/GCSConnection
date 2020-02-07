@@ -10,7 +10,7 @@ gcs_dir(path, delimiter = "/", recursive = FALSE, deep = 2L)
 \item{path}{Character(1), the path to the bucket/folder/file,
 seperated by `delimiter`.}
 
-\item{delimiter}{Character(1), A character or multiple characters that
+\item{delimiter}{Character(1), A character that
 can be used to determine the naming scheme of the directory.}
 
 \item{recursive}{Logical(1), whether recursively query all subdirectory.
