@@ -4,20 +4,35 @@
 \alias{gcs_cp}
 \title{copy files to and from buckets}
 \usage{
-gcs_cp(from, to)
+gcs_cp(from, to, recursive = TRUE)
 }
 \arguments{
-\item{from, to}{Character(1). The path of the file. It can be either a file path
-or a google URI.}
+\item{from, to}{Character(1). The path to the folder/file. At least one path must be
+a google URI. The function will do its best to guess whether the path is a file or a
+folder, but it is recommended to explicitly add a "/" at the end of the path for the folder path.}
+
+\item{recursive}{logical(1). Whether copy the files in the subfolders.}
 }
 \value{
 No return value
 }
 \description{
-The function supports moving files from bucket to bucket/ disk to bucket/ 
-bucket to disk. Note that the existing destination file will be overwritten.
+The function supports moving files or folders from bucket to bucket, 
+disk to bucket and bucket to disk. 
+Note that the existing destination file will be overwritten.
 }
 \examples{
-# Download a file to a disk
-#gcs_cp("gs://bucket_name/file_name","file_path_on_disk")
+tmp_path <- tempdir()
+## Download a file to a disk
+gcs_cp("gs://genomics-public-data/NA12878.chr20.sample.bam",tmp_path)
+## Check the file existance
+file.exists(file.path(tmp_path,"NA12878.chr20.sample.bam"))
+
+## Download all files in a path.
+## The files in the subfolders will not be copied due to `recursive = FALSE`
+folder_path <- file.path(tmp_path,"example")
+gcs_cp("gs://genomics-public-data/",folder_path, recursive = FALSE)
+## Check the file existance
+list.files(folder_path)
+
 }

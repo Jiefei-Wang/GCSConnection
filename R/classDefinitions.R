@@ -8,27 +8,24 @@
                                                              file_types = "character",
                                                              file_names = "character",
                                                              file_sizes= "character",
-                                                             delimiter = "character",
                                                              recursive = "logical",
-                                                             deep = "numeric",
+                                                             depth = "numeric",
                                                              cache = "environment"
 ))
 ## full_path: The first element is the bucket name, 
 ## the rest is a vector of folder names
-.makeFolderClass<-function(full_path,delimiter = "/",recursive = FALSE,deep=2L){
+.makeFolderClass<-function(full_path,recursive = FALSE,depth = 2L){
   x <- .FolderClass()
-  .full_path(x)<-full_path
-  .delimiter(x) <- delimiter
+  .full_path(x) <- full_path
   .recursive(x) <- recursive
-  x@deep <- deep
+  .depth(x) <- depth
   x <- refresh_list(x)
-  
   x
 }
 #' Print object of class `FolderClass`
 #' 
 #' @param object an object of class `FolderClass`
-#' @return invisible `object`
+#' @return invisible NULL
 #' @export
 setMethod("show", signature("FolderClass"), function(object){
   n_file <- length(.file_names(object))
@@ -51,7 +48,7 @@ setMethod("show", signature("FolderClass"), function(object){
   if(length(size_info)!=0){
     cat("Total Size : ", printable_size(size_info[1]),"\n")
   }
-  invisible(object)
+  invisible(NULL)
 })
 
 
@@ -64,55 +61,53 @@ setMethod("show", signature("FolderClass"), function(object){
 #' A `FolderClass` object or a `FileClass` object
 #' @export
 setMethod("$",signature("FolderClass"),function(x,name){
-  #print(name)
-  if(!name%in%names(x)){
-    stop("Cannot find the specific element `",name,"`")
-  }
-  if(name=="#refresh_list#"){
-    return(function()refresh_list(x))
-  }
-  if(name == "#file_names#"){
-    return(.file_names(x))
-  }
-  if(name=="#file_sizes#"){
-    return(.file_sizes(x))
-  }
-  
-  if(!is.null(.cache(x)[[name]])){
-    return(.cache(x)[[name]])
-  }
-  index <- which(.file_names(x)==name)
-  if(.file_types(x)[index]=="folder"){
-    path <- c(.full_path(x),sub(.delimiter(x),"",name))
-    result <- .makeFolderClass(path,.delimiter(x),.recursive(x),x@deep-1)
-  }else{
-    path <- c(.full_path(x),name)
-    result <- .makeFileClass(path,.delimiter(x))
-  }
-  .cache(x)[[name]]<-result
-  result
+  do.call("[[",args=list(x=x,i=name,exact = FALSE))
 })
 #' @param exact Logical(1), Controls possible partial matching
 #' of `[[` when extracting by a character(1)
 #' @rdname subset-FolderClass-method
 #' @export
 setMethod("[[",signature("FolderClass"),function(x,i,exact =TRUE){
-  if(!exact){
-    index <- pmatch(i,names(x))
-    if(!is.na(index)){
-      i=names(x)[index]
-    }else{
-      return(NULL)
-    }
+  all_names <- .file_names(x)
+  name <- match_name(x, i, exact)
+  if(is.null(name)){
+    return(NULL)
   }
-  do.call("$",args=list(x=x,name=i))
+  #print(name)
+  index <- which(all_names == name)
+  ## If the cache has stored the element, return it directly
+  if(!is.null(.cache(x)[[name]])){
+    return(.cache(x)[[name]])
+  }
+  if(.file_types(x)[index] == "folder"){
+    path <- c(.full_path(x),substring(name,1,nchar(name)-1))
+    result <- .makeFolderClass(path, .recursive(x), x@depth-1)
+  }else{
+    path <- c(.full_path(x),name)
+    result <- .makeFileClass(path)
+  }
+  .cache(x)[[name]]<-result
+  result
 })
+# 
+# if(name=="#refresh_list#"){
+#   return(function()refresh_list(x))
+# }
+# if(name == "#file_names#"){
+#   return(.file_names(x))
+# }
+# if(name=="#file_sizes#"){
+#   return(.file_sizes(x))
+# }
 
 
 #' @inherit base::names
 #' @export
 setMethod("names",signature("FolderClass"),function(x){
-  c(.file_names(x),"#file_names#","#file_sizes#","#refresh_list#")
+  all_names <- .file_names(x)
+  index <- endsWith(all_names,"/")
+  all_names[index] <- substring(all_names[index],1,nchar(all_names[index])-1)
+  all_names
 })
 
 
@@ -131,17 +126,17 @@ setMethod("names",signature("FolderClass"),function(x){
                         lastModified = "character"
                       ),contains = "list")
 
-
-.makeFileClass <-function(full_path,delimiter){
+## full_path is a vector of folder and file names
+.makeFileClass <-function(full_path){
   x<-.FileClass()
   .full_path(x) <- full_path
-  .bucket_name(x)<-full_path[1]
-  .file_name(x)<-paste0(full_path[-1],collapse = delimiter)
-  file_info <- get_file_meta(.bucket_name(x),.file_name(x))
-  .file_size(x)<-file_info$`content-length`
-  .file_type(x)<-file_info$`content-type`
-  .URI(x)<-get_google_URI(.bucket_name(x),.file_name(x))
-  .lastModified(x)<-file_info$`last-modified`
+  .bucket_name(x) <- full_path[1]
+  .file_name(x) <- paste0(full_path[-1], collapse = "/")
+  file_info <- get_file_meta(.bucket_name(x), .file_name(x))
+  .file_size(x) <- file_info$`content-length`
+  .file_type(x) <- file_info$`content-type`
+  .URI(x) <- get_google_URI(.bucket_name(x), .file_name(x))
+  .lastModified(x) <- file_info$`last-modified`
   x
 }
 #' Print object of class `FileClass`
@@ -168,8 +163,21 @@ setMethod("show", signature("FileClass"), function(object){
 #' @rdname subset-FileClass-method
 #' @export
 setMethod("$",signature("FileClass"),function(x,name){
-  if(!name%in%names(x)){
-    stop("Cannot find the specific element `",name,"`")
+  do.call("[[",args=list(x=x,i=name,exact = FALSE))
+})
+
+
+
+
+
+#' @param exact Logical(1), Controls possible partial matching
+#' of `[[` when extracting by a character(1)
+#' @rdname subset-FileClass-method
+#' @export
+setMethod("[[",signature("FileClass"),function(x,i,exact = TRUE){
+  name <- match_name(x, i, exact)
+  if(is.null(name)){
+    return(NULL)
   }
   if(name=="copy_to"){
     func1<-function(destination){
@@ -196,21 +204,7 @@ setMethod("$",signature("FileClass"),function(x,name){
   }
   func <- get(paste0(".",name))
   func(x)
-})
-#' @param exact Logical(1), Controls possible partial matching
-#' of `[[` when extracting by a character(1)
-#' @rdname subset-FileClass-method
-#' @export
-setMethod("[[",signature("FileClass"),function(x,i,exact =TRUE){
-  if(!exact){
-    index <- pmatch(i,names(x))
-    if(!is.na(index)){
-      i=names(x)[index]
-    }else{
-      return(NULL)
-    }
-  }
-  do.call("$",args=list(x=x,name=i))
+  
 })
 
 #' @inherit base::names

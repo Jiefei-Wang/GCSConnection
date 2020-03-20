@@ -4,21 +4,20 @@
 \alias{gcs_dir}
 \title{List bucket/folder/object}
 \usage{
-gcs_dir(path, delimiter = "/", recursive = FALSE, deep = 2L)
+gcs_dir(path, delimiter = TRUE, recursive = FALSE, depth = 2L)
 }
 \arguments{
 \item{path}{Character(1), the path to the bucket/folder/file,
 seperated by `delimiter`.}
 
-\item{delimiter}{Character(1), A character that
-can be used to determine the naming scheme of the directory.}
+\item{delimiter}{Logical(1), whether to use `/` as a path delimiter}
 
 \item{recursive}{Logical(1), whether recursively query all subdirectory.
 If TRUE, all information of the subdirectories will be downloaded. The 
 time cost can be significantly reduced if the value is FALSE. The parameter
 only works with bucket/folder.}
 
-\item{deep}{Integer(1), the depth of the reursive search}
+\item{depth}{Integer(1), the depth of the reursive search}
 }
 \value{
 A `FolderClass` object or a `FileClass` object

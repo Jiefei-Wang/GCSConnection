@@ -31,7 +31,31 @@ printable_size <-function(size_list){
 is_google_uri <- function(x){
     nchar(x)>=5 && substr(x,1,5)=="gs://"
 }
-
+get_google_URI <- function(bucket, file) {
+    paste0("gs://", bucket, "/", paste0(file,collapse="/"))
+}
+decompose_google_URI<-function(x){
+    if(is_google_uri(x)){
+        URI <- x
+        x <- substring(x,first = 6)
+    }else{
+        URI <- paste0("gs://", x)
+    }
+    components <- strsplit(x, "/")[[1]]
+    bucket <- components[1]
+    path <- components[-1]
+    is_folder <- endsWith(x,"/") || length(path)==0
+    path_in_bucket <- paste0(path,collapse="/")
+    if(is_folder&&length(path)!=0)
+        path_in_bucket <- paste0(path_in_bucket,"/")
+    
+    list(URI = URI,
+         bucket = bucket,
+         path = path,
+         full_path = components,
+         path_in_bucket = path_in_bucket,
+         is_folder = is_folder)
+}
 digest_path <- function(description, bucket = NULL) {
     if (is_google_uri(description)) {
         bucket <- strsplit(description, "/")[[1]][3]
@@ -41,10 +65,32 @@ digest_path <- function(description, bucket = NULL) {
     }
     list(file = file, bucket = bucket)
 }
-
-get_google_URI <- function(bucket, file) {
-    paste0("gs://", bucket, "/", file)
+## The input should be either a file path in disk or a google cloud URI
+standardize_file_path<- function(x){
+    is_cloud_path <- is_google_uri(x)
+    if(!is_cloud_path){
+        x_std <- normalizePath(x, winslash ="/" ,mustWork = FALSE)
+        if(file.exists(x_std)){
+            info <- file.info(x_std)
+            if(info$isdir&&!endsWith(x,"/"))
+                x_std =paste0(x_std,"/")
+        }
+    }
+    else{
+        info <- decompose_google_URI(x)
+        if(is.na(info$bucket))
+            stop("Illigal path: ",x)
+        if(length(info$path)==0&&!endsWith(x,"/")){
+            x_std <- paste0(x,"/")
+        }else{
+            x_std <- info$URI
+        }
+    }
+    x_std
 }
+
+
+
 
 is_scalar_character <- function(x) {
     is.character(x) && length(x) == 1

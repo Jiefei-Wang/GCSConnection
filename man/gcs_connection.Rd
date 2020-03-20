@@ -4,8 +4,12 @@
 \alias{gcs_connection}
 \title{Connection to google cloud storage}
 \usage{
-gcs_connection(description, open = "rb",
-  encoding = getOption("encoding"), bucket = NULL)
+gcs_connection(
+  description,
+  open = "rb",
+  encoding = getOption("encoding"),
+  bucket = NULL
+)
 }
 \arguments{
 \item{description}{character(1). The name of the file that you want to connect to.
