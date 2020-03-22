@@ -184,10 +184,13 @@ upload_data_from_disk <- function(disk_path, bucket, file){
 }
 
 
-#file_path: either a folder path or a file directory
-list_files <-function(bucket,file_path,delimiter = "/"){
+#full_path_vector: either a path to a folder/file or an empty string
+list_files <-function(full_path_vector, delimiter = "/"){
+    bucket <- full_path_vector[1]
+    path_string <- get_combined_path(full_path_vector[-1], is_folder = TRUE)
+    
     url <- JSON_URL(bucket)
-    url=paste0(url,"/?delimiter=",delimiter,"&prefix=",file_path)
+    url=paste0(url,"/?delimiter=",delimiter,"&prefix=",path_string)
     auth <- get_token()
     r <- GET (
         url,
@@ -202,6 +205,9 @@ list_files <-function(bucket,file_path,delimiter = "/"){
     file_sizes <- vapply(files, function(x) x$Size, character(1),USE.NAMES =FALSE)
     folders <- query_result[names(query_result)=="CommonPrefixes"]
     folder_names <- vapply(folders,function(x) x$Prefix, character(1),USE.NAMES =FALSE)
+    ## Remove the prefix
+    file_names <- substring(file_names,nchar(path_string)+1)
+    folder_names <- substring(folder_names,nchar(path_string)+1)
     
     list(file_names = file_names, 
          file_sizes = file_sizes,

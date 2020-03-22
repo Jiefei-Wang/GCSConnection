@@ -1,7 +1,7 @@
 ##########################################
 ## Folder class accessor
 ##########################################
-.full_path<-function(x)x@full_path
+.full_path_vector<-function(x)x@full_path_vector
 .file_types<-function(x) x@file_types
 .file_names<-function(x) x@file_names
 .file_sizes<-function(x) x@file_sizes
@@ -11,8 +11,8 @@
 
 
 
-`.full_path<-`<-function(x,value){
-    x@full_path <- value
+`.full_path_vector<-`<-function(x,value){
+    x@full_path_vector <- value
     x
 }
 `.file_types<-` <- function(x, value){
@@ -47,7 +47,7 @@
 ##########################################
 .full_single_char_path<-function(x){
     delimitor <- "/"
-    path <- .full_path(x)
+    path <- .full_path_vector(x)
     paste0(paste0(path,collapse = delimitor),delimitor)
 }
 .total_size <- function(x){
@@ -61,25 +61,32 @@
 ## Refresh the list of files in a folder
 refresh_list<-function(x){
     delimiter <- "/"
-    full_path <- .full_path(x)
+    full_path_vector <- .full_path_vector(x)
     recursive<- .recursive(x)
-    bucket_name <- full_path[1]
-    folder_names <- full_path[-1]
-    if(length(folder_names)!=0){
-        folder_path <- paste0(paste0(folder_names,collapse =delimiter),delimiter)
-    }else{
-        folder_path <- ""
-    }
-    query_result <- list_files(bucket_name,folder_path,delimiter)
+    bucket_name <- full_path_vector[1]
     
+    query_result <- list_files(full_path_vector)
     .file_types(x)<-c(
         rep("file",length(query_result$file_names)),
         rep("folder",length(query_result$folder_names))
     )
-    .file_names(x)<-c(query_result$file_names,query_result$folder_names)
-    .file_names(x) <- substring(.file_names(x),nchar(folder_path)+1)
     .file_sizes(x)<-c(query_result$file_sizes,
                       rep("*",length(query_result$folder_names)))
+    all_names<-c(query_result$file_names,query_result$folder_names)
+    .file_names(x) <- all_names
+    ## Check if there is any file end with /
+    ## Somehow someone did do it. Wired
+    ind <- which(.file_names(x) == "")
+    if(length(ind)!=0){
+        if(.file_sizes(x)[ind]!=0)
+            warning("Non-standard end of the file name(a slash) has been found, it will be ignored:\n",
+                    all_names[ind]
+                    )
+        .file_names(x) <- .file_names(x)[-ind]
+        .file_sizes(x) <- .file_sizes(x)[-ind]
+        .file_types(x) <- .file_types(x)[-ind]
+    }
+    
     remove(list= ls(.cache(x)),envir = .cache(x))
     if(.recursive(x)&&x@depth>0){
         lapply(seq_along(.file_names(x)),function(i) x[[i]])
@@ -107,7 +114,7 @@ match_name<-function(x,i,exact){
                 name<- NULL
             }
         }else{
-            index <- which(i%in%all_names)
+            index <- which(all_names%in%i)
             if(length(index)!=0){
                 name <- all_names[index[1]]
             }else{

@@ -4,7 +4,7 @@
 #'  via `$` and `[[` operators.
 #' 
 #' @export
-.FolderClass <- setClass("FolderClass",representation = list(full_path = "character",
+.FolderClass <- setClass("FolderClass",representation = list(full_path_vector = "character",
                                                              file_types = "character",
                                                              file_names = "character",
                                                              file_sizes= "character",
@@ -12,11 +12,11 @@
                                                              depth = "numeric",
                                                              cache = "environment"
 ))
-## full_path: The first element is the bucket name, 
+## full_path_vector: The first element is the bucket name, 
 ## the rest is a vector of folder names
-.makeFolderClass<-function(full_path,recursive = FALSE,depth = 2L){
+.makeFolderClass<-function(full_path_vector,recursive = FALSE,depth = 2L){
   x <- .FolderClass()
-  .full_path(x) <- full_path
+  .full_path_vector(x) <- full_path_vector
   .recursive(x) <- recursive
   .depth(x) <- depth
   x <- refresh_list(x)
@@ -29,9 +29,9 @@
 #' @export
 setMethod("show", signature("FolderClass"), function(object){
   n_file <- length(.file_names(object))
-  if(length(.full_path(object))==1){
+  if(length(.full_path_vector(object))==1){
     cat(n_file, " items in the bucket `",
-        .full_path(object),"`:\n",sep ="")
+        .full_path_vector(object),"`:\n",sep ="")
   }else{
     cat(n_file, " items in the folder `",
         .full_single_char_path(object),
@@ -41,7 +41,8 @@ setMethod("show", signature("FolderClass"), function(object){
   file_sizes <- .file_sizes(object)
   file_sizes[file_sizes!="*"] <- printable_size(as.numeric(file_sizes[file_sizes!="*"]))
   info = data.frame(Name = .file_names(object),
-                    Size = file_sizes,stringsAsFactors = FALSE)
+                    Size = file_sizes,
+                    stringsAsFactors = FALSE)
   print(info)
   cat("--------------------\n")
   size_info <- .total_size(object)
@@ -68,23 +69,42 @@ setMethod("$",signature("FolderClass"),function(x,name){
 #' @rdname subset-FolderClass-method
 #' @export
 setMethod("[[",signature("FolderClass"),function(x,i,exact =TRUE){
-  all_names <- .file_names(x)
+  ## If the index is a path to a file
+  if(is.character(i)){
+    if(length(grep("/.",i))!=0){
+      info <- decompose_google_URI(i)
+      path_vector <- info$full_path_vector
+      n <- length(path_vector)
+      path_vector[-n]<- paste0(path_vector[-n],"/")
+      path_exact <- rep(TRUE, n)
+      path_exact[n] <- exact
+      call_str <- paste0("x",
+                          paste0("[[\"",path_vector,"\",exact = ",path_exact,"]]",collapse=""))
+      call_expr <- parse(text = call_str)
+      return(eval(call_expr))
+    }
+  }
+  
+  ## If the index is just a single file/folder name
   name <- match_name(x, i, exact)
   if(is.null(name)){
     return(NULL)
   }
   #print(name)
+  all_names <- .file_names(x)
   index <- which(all_names == name)
   ## If the cache has stored the element, return it directly
   if(!is.null(.cache(x)[[name]])){
     return(.cache(x)[[name]])
   }
   if(.file_types(x)[index] == "folder"){
-    path <- c(.full_path(x),substring(name,1,nchar(name)-1))
-    result <- .makeFolderClass(path, .recursive(x), x@depth-1)
+    path <- c(.full_path_vector(x),substring(name,1,nchar(name)-1))
+    result <- .makeFolderClass(full_path_vector = path, 
+                               recursive = .recursive(x), 
+                               depth = .depth(x) -1)
   }else{
-    path <- c(.full_path(x),name)
-    result <- .makeFileClass(path)
+    path <- c(.full_path_vector(x),name)
+    result <- .makeFileClass(full_path_vector = path)
   }
   .cache(x)[[name]]<-result
   result
@@ -117,7 +137,7 @@ setMethod("names",signature("FolderClass"),function(x){
 #' @export
 .FileClass = setClass("FileClass",
                       representation = list(
-                        full_path = "character",
+                        full_path_vector = "character",
                         bucket_name = "character",
                         file_name = "character",
                         file_size = "character",
@@ -126,12 +146,12 @@ setMethod("names",signature("FolderClass"),function(x){
                         lastModified = "character"
                       ),contains = "list")
 
-## full_path is a vector of folder and file names
-.makeFileClass <-function(full_path){
+## full_path_vector is a vector of folder and file names
+.makeFileClass <-function(full_path_vector){
   x<-.FileClass()
-  .full_path(x) <- full_path
-  .bucket_name(x) <- full_path[1]
-  .file_name(x) <- paste0(full_path[-1], collapse = "/")
+  .full_path_vector(x) <- full_path_vector
+  .bucket_name(x) <- full_path_vector[1]
+  .file_name(x) <- paste0(full_path_vector[-1], collapse = "/")
   file_info <- get_file_meta(.bucket_name(x), .file_name(x))
   .file_size(x) <- file_info$`content-length`
   .file_type(x) <- file_info$`content-type`
@@ -175,6 +195,10 @@ setMethod("$",signature("FileClass"),function(x,name){
 #' @rdname subset-FileClass-method
 #' @export
 setMethod("[[",signature("FileClass"),function(x,i,exact = TRUE){
+  if(is.character(i)){
+    path_all <- strsplit(i,"/.+",fixed = TRUE)
+    # if(length(path_all) >1)
+  }
   name <- match_name(x, i, exact)
   if(is.null(name)){
     return(NULL)
@@ -210,7 +234,7 @@ setMethod("[[",signature("FileClass"),function(x,i,exact = TRUE){
 #' @inherit base::names
 #' @export
 setMethod("names",signature("FileClass"),function(x){
-  c("full_path","bucket_name","file_name","file_size"  , 
+  c("full_path_vector","bucket_name","file_name","file_size"  , 
     "file_type","URI","lastModified",
     "copy_to","delete","get_connection")
 })

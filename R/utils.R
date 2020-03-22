@@ -12,6 +12,31 @@ myCeiling<-function(x,digit){
     ceiling(x*10^digit)/10^digit
 }
 
+
+is.folder_path<- function(x){
+    path <- split_folde_path(x)
+    endsWith(x,"/") || length(path)==1
+}
+split_folde_path <- function(x){
+    res <- strsplit(x,"/",fixed = TRUE)[[1]]
+    res
+}
+split_file_path<-function(x){
+    res <- strsplit(x,"/",fixed = TRUE)[[1]]
+    if(endsWith(x,"/")){
+        res[length(res)] <- paste0(res[length(res)],"/")
+    }
+    res
+}
+
+## The path is a vector of names without bucket
+get_combined_path <- function(path_vec, is_folder){
+    combined_path <- paste0(path_vec,collapse="/")
+    if(is_folder&&length(path_vec)!=0&&!endsWith(combined_path,"/"))
+        combined_path <- paste0(combined_path,"/")
+    combined_path
+}
+
 ## Convert size in byte to a character format for print
 printable_size <-function(size_list){
     result <- rep("",length(size_list))
@@ -31,29 +56,36 @@ printable_size <-function(size_list){
 is_google_uri <- function(x){
     nchar(x)>=5 && substr(x,1,5)=="gs://"
 }
-get_google_URI <- function(bucket, file) {
+get_google_URI <- function(bucket, file, full_path_vector = NULL) {
+    if(!is.null(full_path_vector)){
+        bucket <- full_path_vector[1]
+        file <- full_path_vector[-1]
+    }
     paste0("gs://", bucket, "/", paste0(file,collapse="/"))
 }
-decompose_google_URI<-function(x){
+decompose_google_URI<-function(x, is_folder = NULL){
     if(is_google_uri(x)){
-        URI <- x
         x <- substring(x,first = 6)
     }else{
-        URI <- paste0("gs://", x)
     }
-    components <- strsplit(x, "/")[[1]]
-    bucket <- components[1]
-    path <- components[-1]
-    is_folder <- endsWith(x,"/") || length(path)==0
-    path_in_bucket <- paste0(path,collapse="/")
-    if(is_folder&&length(path)!=0)
-        path_in_bucket <- paste0(path_in_bucket,"/")
+    if(is.null(is_folder)){
+        is_folder <- is.folder_path(x)
+    }
+    if(is_folder){
+        full_path_vector <- split_folde_path(x)
+    }else{
+        full_path_vector <- split_file_path(x)
+    }
+    bucket <- full_path_vector[1]
+    path_vector <- full_path_vector[-1]
+    path_string <- get_combined_path(path_vector,is_folder)
+    URI <- get_google_URI(full_path_vector = full_path_vector)
     
     list(URI = URI,
          bucket = bucket,
-         path = path,
-         full_path = components,
-         path_in_bucket = path_in_bucket,
+         path_vector = path_vector,
+         full_path_vector = full_path_vector,
+         path_string = path_string,
          is_folder = is_folder)
 }
 digest_path <- function(description, bucket = NULL) {
@@ -66,13 +98,17 @@ digest_path <- function(description, bucket = NULL) {
     list(file = file, bucket = bucket)
 }
 ## The input should be either a file path in disk or a google cloud URI
-standardize_file_path<- function(x){
+standardize_file_path<- function(x, check_type = TRUE){
     is_cloud_path <- is_google_uri(x)
     if(!is_cloud_path){
         x_std <- normalizePath(x, winslash ="/" ,mustWork = FALSE)
-        if(file.exists(x_std)){
+        ## If file exist, check whether it is a folder or a file
+        ## Add "/" at the end if it is a folder
+        if(check_type&&
+           !endsWith(x,"/") && 
+           file.exists(x_std)){
             info <- file.info(x_std)
-            if(info$isdir&&!endsWith(x,"/"))
+            if(info$isdir)
                 x_std =paste0(x_std,"/")
         }
     }
@@ -80,11 +116,7 @@ standardize_file_path<- function(x){
         info <- decompose_google_URI(x)
         if(is.na(info$bucket))
             stop("Illigal path: ",x)
-        if(length(info$path)==0&&!endsWith(x,"/")){
-            x_std <- paste0(x,"/")
-        }else{
-            x_std <- info$URI
-        }
+        x_std <- info$URI
     }
     x_std
 }

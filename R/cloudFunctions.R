@@ -96,9 +96,9 @@ gcs_connection <- function(description,
 #' 
 #' @param from,to Character(1). The path to the folder/file. 
 #' At least one path must be a google URI. The function will do its 
-#' best to guess whether the path represents a file or a folder, but it is 
+#' best to guess whether the path is a path to a file or a folder, but it is 
 #' recommended to explicitly add a "/" at the end of the path for 
-#' the folder path. 
+#' the folder path to exclude the possible mistake. 
 #' @param recursive logical(1). Whether copy the files in the subfolders.
 #' @return No return value
 #' @examples 
@@ -122,11 +122,12 @@ gcs_cp <- function(from, to, recursive = TRUE){
     if(!from_cloud&&!to_cloud)
         stop("Hey, I am a google cloud package. ",
              "Why do you use me to manage your disk file?")
-    from <- standardize_file_path(from)
-    to <- standardize_file_path(to)
+    from <- standardize_file_path(from, check_type = TRUE)
+    to <- standardize_file_path(to, check_type = FALSE)
     
     from_folder <- endsWith(from, "/")
     to_folder <- endsWith(to, "/")
+    
     if(from_folder&&!to_folder){
         to <- paste0(to, "/")
         to_folder <- TRUE
@@ -146,10 +147,10 @@ gcs_cp_internal <- function(from, to, from_cloud,to_cloud,is_folder, recursive){
             ## If the source is in the cloud
             ## Read file names in cloud and download them
             info <- decompose_google_URI(from)
-            results <- list_files(bucket = info$bucket, file_path = info$path_in_bucket)
+            results <- list_files(info$full_path_vector)
             ## recursively copy all files in subfolders
             if(recursive){
-                subfolder_names <- substring(results$folder_names,nchar(info$path_in_bucket)+1)
+                subfolder_names <- results$folder_names
                 if(length(subfolder_names)!=0){
                     from_subfolder <- paste0(from,subfolder_names)
                     to_subfolder <- paste0(to,subfolder_names)
@@ -160,7 +161,7 @@ gcs_cp_internal <- function(from, to, from_cloud,to_cloud,is_folder, recursive){
                 }
             }
             ## get the files in the folder
-            subfile_names <- substring(results$file_names,nchar(info$path_in_bucket)+1)
+            subfile_names <- results$file_names
             ind <- which(subfile_names=="")
             if(length(ind)!=0){
                 warning("Non-standard file path is found:\n",
@@ -168,7 +169,6 @@ gcs_cp_internal <- function(from, to, from_cloud,to_cloud,is_folder, recursive){
                         "this file will not be downloaded.")
                 subfile_names <- subfile_names[-ind]
             }
-            
         }else{
             ## If the source is in local disk
             ## get the files in the folder
@@ -189,14 +189,14 @@ gcs_cp_internal <- function(from, to, from_cloud,to_cloud,is_folder, recursive){
             info <- decompose_google_URI(from)
             from <- list(
                 bucket = info$bucket,
-                file = info$path_in_bucket
+                file = info$path_string
             )
         }
         if(to_cloud){
             info <- decompose_google_URI(to)
             to <- list(
                 bucket = info$bucket,
-                file = info$path_in_bucket
+                file = info$path_string
             )
         }else{
             dir.create(dirname(to), showWarnings = FALSE,recursive=TRUE)
@@ -245,9 +245,11 @@ gcs_dir<-function(path, delimiter =  TRUE ,recursive = FALSE, depth = 2L){
     ## Determine whether the path is a file path or a folder path
     ## If delimiter is not used, the path must be a file path
     if(!info$is_folder||!delimiter){
-        .makeFileClass(full_path = info$full_path)
+        ## If the file ends with a `/`
+        ## Add the missing `/`
+        .makeFileClass(full_path_vector = info$full_path_vector)
     }else{
-        .makeFolderClass(full_path = info$full_path,
+        .makeFolderClass(full_path_vector = info$full_path_vector,
                          recursive = recursive,
                          depth = depth)
     }
