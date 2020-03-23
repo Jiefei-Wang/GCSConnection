@@ -7,25 +7,33 @@
 gcs_dir(path, delimiter = TRUE, recursive = FALSE, depth = 2L)
 }
 \arguments{
-\item{path}{Character(1), the path to the bucket/folder/file,
-seperated by `delimiter`.}
+\item{path}{Character(1), the path to the bucket/folder/file.}
 
-\item{delimiter}{Logical(1), whether to use `/` as a path delimiter}
+\item{delimiter}{Logical(1), whether to use `/` as a path delimiter. If not, 
+the path will be treated as the path to a file even when it ends with `/`}
 
 \item{recursive}{Logical(1), whether recursively query all subdirectory.
-If TRUE, all information of the subdirectories will be downloaded. The 
-time cost can be significantly reduced if the value is FALSE. The parameter
+If `TRUE`, all information of the subdirectories will be downloaded. The 
+time cost can be significantly reduced if the value is `FALSE`. The parameter
 only works with bucket/folder.}
 
-\item{depth}{Integer(1), the depth of the reursive search}
+\item{depth}{Integer(1), the depth of the recursive download.}
 }
 \value{
 A `FolderClass` object or a `FileClass` object
 }
 \description{
-Get a list of objects in a bucket/folder if the path ends with `delimiter`.
-Otherwise, get a description of a file.
+Get a list of objects in a bucket/folder if the path ends with `/`.
+Otherwise, get the description of a file.
 }
 \examples{
+## List files in a bucket
+## Equivalent: gcs_dir(path = "gs://genomics-public-data/")
 gcs_dir(path = "genomics-public-data/")
+
+## List files in a folder
+gcs_dir(path = "genomics-public-data/clinvar/")
+
+## List the information of a file
+gcs_dir(path = "genomics-public-data/clinvar/README.txt")
 }

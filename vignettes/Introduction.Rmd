@@ -39,7 +39,7 @@ variables are empty, you will only be able to access public data. If you set the
 The function `gcs_cloud_auth` provides two ways to authenticate with Google Cloud. When you have a service account credentials, you can authenticate with Google Cloud by calling `gcs_cloud_auth(credentials_file_path)`. The second method is to get credentials from [Cloud SDK][]. The package is able to interact with the command-line tool gcloud. Once the account has been set in the `gcloud` program, the package can be authenticated by `gcs_cloud_auth(gcloud = TRUE)`. By default, the package will use the first account in gcloud to authenticate with Google. If there are multiple accounts in gcloud, you can switch the account by `gcs_cloud_auth(gcloud = TRUE, email = "your email address")`. 
 
 ## Anouymous access
-Not all the cloud buckets require a credentials to access. You can read public data without authenticating with Google. By default, if the package fails to find the credentials from the environment variables, the package will use anouymous access method to query data from google cloud. Otherwise, you can switch to the anouymous mode by calling `gcs_cloud_auth(json_file = NULL)`. An error message will be shown if the access is denied.
+Not all the cloud buckets require a credentials to access. You can read public data without authenticating with Google. By default, if the package fails to find the credentials from the environment variables, it will use anouymous access method to query data from google cloud. Otherwise, you can switch to the anouymous mode by calling `gcs_cloud_auth(json_file = NULL)`. 
 
 
 
@@ -55,32 +55,31 @@ gcs_get_cloud_auth()
 
 # Manually create connections
 
-Creating a connection to a file on a Google Cloud bucket is simple,
-simply provide the URL using . Below is an example to create a read
-connection with a public dataset on Google Cloud Platform.
+Creating a connection to a file in a bucket is simple,
+you can simply provide an URL to `gcs_connection`. Below is an example to create 
+a read connection to a public dataset on Google Cloud Platform.
 ```{r}
 file <- "gs://genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
 con <- gcs_connection(description = file, open = "r")
-readLines(con, n = 4L)
+readLines(con, n = 2L)
 close(con)
 ```
 Note that you do not need a credentials for accessing the public data.
-the character "rp" in the parameter `open` is an abbreviation of read and public respectively. See `?gcs_connection` for more details.
+the character "r" in the parameter `open` is an abbreviation of read, please see `?gcs_connection` for more details.
 
 It is also possible to specifying file and bucket name
-individually. For example:
+separately. For example:
 ```{r}
 file_name <- "NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
 bucket_name <- "genomics-public-data"
 con <- gcs_connection(
     description = file_name, open = "r", bucket = bucket_name
 )
-readLines(con, n = 4L)
+readLines(con, n = 2L)
 close(con)
 ```
 The above code can create the same connection as the previous
-example. Note that if both link and bucket name are provided, the
-bucket name will be ignored. 
+example. Note that you cannot provide both URI and bucket name to `gcs_connection`.
 
 For the write connection, it can be made by specifying an appropriate
 open mode in the `gcs_connection` function. Please note that due to
@@ -94,33 +93,50 @@ data can be made.
 # create connections from file manager
 Besides manually creating a connection, the package provides a simple and convinent  S4 class to manage the files. You can list all files in a bucket/folder by
 ```{r}
-x <- gcs_dir("genomics-public-data/")
+## These are equivalent
+## x <- gcs_dir("gs://genomics-public-data/clinvar/")
+## x <- gcs_dir("genomics-public-data/clinvar/")
+
+x <- gcs_dir("gs://genomics-public-data/clinvar/")
 x
 ```
-Note that for listing files in a bucket, the last `/` symbol is not required. However, if you want to list files in a folder inside a bucket, you must include the `/` symbol. In fact, there is no hierarchical structure in a bucket, all files are in the same level. By using the slash delimiter, you can make the files appear as though they are sotred in folders. You can also change the delimiter by changing the argument `delimiter` in the function `gcs_dir`.
+Note that for listing files in a bucket, the last `/` symbol is not required. However, if you want to list files in a folder inside a bucket, you must include the `/` symbol. In fact, there is no hierarchical structure in a bucket, all files are in the same level. By using the slash delimiter, you can make the files appear as though they are sotred in folders.
 
-Once obtaining a list of files, you can view the detail of a file through `$` operator
+Once obtaining a list of files, you can move your current path or view the detail of a file through `$` or `[[` operator
 ```{r}
-x$`NA12878.chr20.sample.DeepVariant-0.7.2.vcf`
+## equivalent: x$README.txt
+x[["README.txt"]]
+```
+You can also use `..` to go to the parent folder
+```{r}
+## equivalent: x$`..`
+x[[".."]]
 ```
 
 The connection can be made by
 ```{r}
-con <- x$`NA12878.chr20.sample.DeepVariant-0.7.2.vcf`$get_connection(open = "r")
+con <- x$README.txt$get_connection(open = "r")
 con
 close(con)
 ```
-You can also query files info, copy, delete files through the file object
+You can also query file info, copy, delete files through via the file manager
 ```{r}
-x$`NA12878.chr20.sample.DeepVariant-0.7.2.vcf`$file_name
-#x$`NA12878.chr20.sample.DeepVariant-0.7.2.vcf`$copy_to(destination)
-#x$`NA12878.chr20.sample.DeepVariant-0.7.2.vcf`$delete()
-```
-Note that you cannot delete a folder since beforementioned file hierarchy issue. Once all files in a folder has been deleted, the folder will be removed. If you want to update the file list after doing inserting or deleting operation, you can refresh the list by
-```{r}
-x <- x$`#refresh_list#`()
-```
+## Get file name
+x$README.txt$file_name
 
+## copy file
+## For the destination, you can specify a path to the file, 
+## or a path to a folder.
+destination <-tempdir()
+x$README.txt$copy_to(destination)
+file.exists(file.path(destination,x$README.txt$file_name))
+
+## Delete file, the function is excutable 
+## only when you have the right to delete the file.
+## Use `quiet = TRUE` to suppress the confirmation before deleting the file.
+# x$README.txt$delete(quiet = FALSE)
+```
+Note that you cannot delete a folder since beforementioned file hierarchy issue. Once all files in a folder has been deleted, the folder will be removed. 
 
 # Buffer size
 

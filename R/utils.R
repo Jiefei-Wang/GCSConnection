@@ -98,6 +98,7 @@ digest_path <- function(description, bucket = NULL) {
     list(file = file, bucket = bucket)
 }
 ## The input should be either a file path in disk or a google cloud URI
+## Used by gcs_cp
 standardize_file_path<- function(x, check_type = TRUE){
     is_cloud_path <- is_google_uri(x)
     if(!is_cloud_path){

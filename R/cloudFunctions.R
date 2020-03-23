@@ -44,15 +44,24 @@ gcs_connection <- function(description,
     )
     
     ## get the file name and bucket name from description
-    file_info <- digest_path(description, bucket)
-    file <- file_info$file
-    bucket <- file_info$bucket
+    if(is_google_uri(description)&&!is.null(bucket)){
+        stop("The argument `bucket` must be NULL when a google URI is provided")
+    }
+    
+    if(is_google_uri(description)){
+        file_info <- decompose_google_URI(description, is_folder= FALSE)
+        bucket <- file_info$bucket
+        file <- file_info$path_string
+    }else{
+        ## If unable to get the bucket name, use the default setting
+        if(is.null(bucket)){
+            bucket <- googleCloudStorageR::gcs_get_global_bucket()
+        }
+        file <- description
+    }
+    
     description <- get_google_URI(bucket, file)
     
-    
-    ## If unable to get the bucket name, use the default setting
-    if (is.null(bucket))
-        bucket <- googleCloudStorageR::gcs_get_global_bucket()
     
     token <- get_token()
     
@@ -99,7 +108,7 @@ gcs_connection <- function(description,
 #' best to guess whether the path is a path to a file or a folder, but it is 
 #' recommended to explicitly add a "/" at the end of the path for 
 #' the folder path to exclude the possible mistake. 
-#' @param recursive logical(1). Whether copy the files in the subfolders.
+#' @param recursive logical(1). Whether recursively copy the files in the subfolders.
 #' @return No return value
 #' @examples 
 #' tmp_path <- tempdir()
@@ -123,7 +132,7 @@ gcs_cp <- function(from, to, recursive = TRUE){
         stop("Hey, I am a google cloud package. ",
              "Why do you use me to manage your disk file?")
     from <- standardize_file_path(from, check_type = TRUE)
-    to <- standardize_file_path(to, check_type = FALSE)
+    to <- standardize_file_path(to, check_type = TRUE)
     
     from_folder <- endsWith(from, "/")
     to_folder <- endsWith(to, "/")
@@ -147,23 +156,33 @@ gcs_cp_internal <- function(from, to, from_cloud,to_cloud,is_folder, recursive){
             ## If the source is in the cloud
             ## Read file names in cloud and download them
             info <- decompose_google_URI(from)
-            results <- list_files(info$full_path_vector)
-            ## recursively copy all files in subfolders
             if(recursive){
-                subfolder_names <- results$folder_names
-                if(length(subfolder_names)!=0){
-                    from_subfolder <- paste0(from,subfolder_names)
-                    to_subfolder <- paste0(to,subfolder_names)
-                    lapply(seq_along(subfolder_names),function(i)
-                        gcs_cp_internal(from = from_subfolder[i], to = to_subfolder[i],
-                                        from_cloud = from_cloud, to_cloud = to_cloud,
-                                        is_folder = TRUE, recursive = recursive))
+                delimiter = ""
+            }else{
+                delimiter = "/"
+            }
+            results <- list_files(info$full_path_vector,delimiter = delimiter)
+            subfile_names <- results$file_names
+            if(length(subfile_names)==1000){
+                answer <- readline(prompt="More than 1000 files will be downloaded, are you sure to continue?[y/n]: ")
+                answer <- tolower(answer)
+                if(answer == "y"){
+                    repeat{
+                        message("round")
+                        token <- results$next_page_token
+                        results <- list_files(info$full_path_vector,
+                                              delimiter = delimiter,
+                                              next_page_token = token)
+                        subfile_names <- c(subfile_names,results$file_names)
+                        if(is.null(results$next_page_token))
+                            break
+                    }
+                }else{
+                    return()
                 }
             }
-            ## get the files in the folder
-            subfile_names <- results$file_names
             ind <- which(subfile_names=="")
-            if(length(ind)!=0){
+            if(length(ind)!=0 && results$file_sizes[ind] !="0"){
                 warning("Non-standard file path is found:\n",
                         info$URI,"\n",
                         "this file will not be downloaded.")
@@ -218,25 +237,29 @@ gcs_cp_internal <- function(from, to, from_cloud,to_cloud,is_folder, recursive){
     
 }
 
-
-
-
 #' List bucket/folder/object
 #' 
-#' Get a list of objects in a bucket/folder if the path ends with `delimiter`.
-#' Otherwise, get a description of a file.
+#' Get a list of objects in a bucket/folder if the path ends with `/`.
+#' Otherwise, get the description of a file.
 #' 
-#' 
-#' @param path Character(1), the path to the bucket/folder/file,
-#' seperated by `delimiter`. 
-#' @param delimiter Logical(1), whether to use `/` as a path delimiter
+#' @param path Character(1), the path to the bucket/folder/file.
+#' @param delimiter Logical(1), whether to use `/` as a path delimiter. If not, 
+#' the path will be treated as the path to a file even when it ends with `/`
 #' @param recursive Logical(1), whether recursively query all subdirectory.
-#' If TRUE, all information of the subdirectories will be downloaded. The 
-#' time cost can be significantly reduced if the value is FALSE. The parameter
+#' If `TRUE`, all information of the subdirectories will be downloaded. The 
+#' time cost can be significantly reduced if the value is `FALSE`. The parameter
 #' only works with bucket/folder.
-#' @param depth Integer(1), the depth of the reursive search
+#' @param depth Integer(1), the depth of the recursive download.
 #' @examples 
+#' ## List files in a bucket
+#' ## Equivalent: gcs_dir(path = "gs://genomics-public-data/")
 #' gcs_dir(path = "genomics-public-data/")
+#' 
+#' ## List files in a folder
+#' gcs_dir(path = "genomics-public-data/clinvar/")
+#' 
+#' ## List the information of a file
+#' gcs_dir(path = "genomics-public-data/clinvar/README.txt")
 #' @return 
 #' A `FolderClass` object or a `FileClass` object
 #' @export

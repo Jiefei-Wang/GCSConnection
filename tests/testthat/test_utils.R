@@ -16,55 +16,77 @@ test_that("gcs_dir: get information of the folders",{
     
     expect_true(is(x$`NA12878.chr20.sample.DeepVariant-0.7.2.vcf`, "FileClass"))
     expect_true(is(x$`1000-genomes-phase-3/`, "FolderClass"))
+})
+
+test_that("gcs_dir: go to path",{
+    ## four ways to specify path
+    expect_error(x <- gcs_dir("gs://genomics-public-data/clinvar/"),NA)
+    expect_error(x[["../"]],NA)
+    expect_error(name1 <- .file_names(x[["../1000-genomes/"]]),NA)
+    expect_error(name2 <- .file_names(x[["../1000-genomes"]]),NA)
+    expect_error(name3 <- .file_names(x[["./../1000-genomes"]]),NA)
+    expect_error(name4 <- .file_names(x[["/../1000-genomes"]]),NA)
+    expect_error(name5 <- .file_names(x$`/../1000-genomes`),NA)
+    expect_equal(name1,name2)
+    expect_equal(name1,name3)
+    expect_equal(name1,name4)
+    expect_equal(name1,name5)
     
+    expect_true(is(x[["/../1000-genomes/README"]], "FileClass"))
 })
 
 
-test_that("gcs_dir: file class test",{
-    x<-gcs_dir("genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf")
+
+test_that("gcs_dir: build connection/download file/delete file",{
+    x<-gcs_dir(URI)
     
+    ## build connection
     con <- x$get_connection(open = "rb")
     expect_error(readBin(con, raw(), n = 10L), NA)
     close(con)
     
+    ## download file
     tmp_path <- tempdir()
     tmp_file_path <- paste0(tmp_path, "/test.vcf")
     x$copy_to(tmp_file_path)
     file_info <- file.info(tmp_file_path)
     expect_equal(file_info$size,as.numeric(x$file_size))
     
+    ## delete file
     expect_true(is(x$delete,"function"))
 })
 
 
 test_that("gcs_cp: download file", {
+    x <- gcs_dir(URI)
+    
     ## Destination is a file path
     tmp_path <- tempdir()
     tmp_file_path <- paste0(tmp_path, "/test.vcf")
     if(file.exists(tmp_file_path))
         file.remove(tmp_file_path)
+    
     gcs_cp(from = URI, to = tmp_file_path)
     ## Check result
     expect_true(file.exists(tmp_file_path))
-    file_info <- gcs_dir(URI)
-    expect_true(as.numeric(file_info$file_size) == file.size(tmp_file_path))
+    expect_true(as.numeric(x$file_size) == file.size(tmp_file_path))
     
     if(file.exists(tmp_file_path))
         file.remove(tmp_file_path)
     
     ## Destination is a folder path
     ## The file name is the same as the file name in the cloud
-    URI_info <- decompose_google_URI(URI)
-    tmp_folder_path <- paste0(tmp_path, "/")
-    tmp_file_path <- paste0(tmp_folder_path,URI_info$path[length(URI_info$path)])
+    for(end in c("","/")){
+    tmp_folder_path <- paste0(tmp_path, end)
     gcs_cp(from = URI, to = tmp_folder_path)
     ## Check result
+    tmp_file_path <- file.path(tmp_path,x$file_name)
     expect_true(file.exists(tmp_file_path))
-    file_info <- gcs_dir(URI)
-    expect_true(as.numeric(file_info$file_size) == file.size(tmp_file_path))
+    expect_true(as.numeric(x$file_size) == file.size(tmp_file_path))
     
     if(file.exists(tmp_file_path))
         file.remove(tmp_file_path)
+    }
 })
 
 test_that("gcs_cp: download folder", {

@@ -81,7 +81,7 @@ refresh_list<-function(x){
         if(.file_sizes(x)[ind]!=0)
             warning("Non-standard end of the file name(a slash) has been found, it will be ignored:\n",
                     all_names[ind]
-                    )
+            )
         .file_names(x) <- .file_names(x)[-ind]
         .file_sizes(x) <- .file_sizes(x)[-ind]
         .file_types(x) <- .file_types(x)[-ind]
@@ -118,6 +118,10 @@ match_name<-function(x,i,exact){
             if(length(index)!=0){
                 name <- all_names[index[1]]
             }else{
+                if(!endsWith(i,"/")){
+                    i <- paste0(i,"/")
+                    return(match_name(x,i,exact))
+                }
                 name<- NULL
             }
         }

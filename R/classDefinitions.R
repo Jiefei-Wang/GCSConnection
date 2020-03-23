@@ -69,19 +69,55 @@ setMethod("$",signature("FolderClass"),function(x,name){
 #' @rdname subset-FolderClass-method
 #' @export
 setMethod("[[",signature("FolderClass"),function(x,i,exact =TRUE){
+  origin_sub <- i
   ## If the index is a path to a file
   if(is.character(i)){
-    if(length(grep("/.",i))!=0){
+    if(i == ".."){
+      i = "../"
+    }
+    if(startsWith(i, "/")){
+      i <- substring(i, 2)
+    }
+    if(startsWith(i, "./")){
+      i <- substring(i, 3)
+    }
+    if(length(grep("/.",i)) != 0 || startsWith(i, "../")){
       info <- decompose_google_URI(i)
       path_vector <- info$full_path_vector
-      n <- length(path_vector)
-      path_vector[-n]<- paste0(path_vector[-n],"/")
-      path_exact <- rep(TRUE, n)
-      path_exact[n] <- exact
-      call_str <- paste0("x",
-                          paste0("[[\"",path_vector,"\",exact = ",path_exact,"]]",collapse=""))
-      call_expr <- parse(text = call_str)
-      return(eval(call_expr))
+      path_vector <- path_vector[path_vector != ""]
+      
+      full_path_vector <- c(.full_path_vector(x),path_vector)
+      removed_path <- rep(FALSE, length(full_path_vector))
+      for(i in seq_along(full_path_vector)){
+        if(full_path_vector[i] == ".."){
+          count <- 2
+          for(j in rev(seq_len(i))){
+            if(!removed_path[j]){
+              removed_path[j] <- TRUE
+              count <- count -1
+            }
+            if(count == 0)
+              break
+          }
+          if(count != 0)
+            stop("Cannot go the the parent directory for you are in the root path: ", origin_sub)
+        }
+      }
+      full_path_vector <- full_path_vector[!removed_path]
+      n <- length(full_path_vector)
+      if(n == 1){
+        ## If switch between bucket
+        if(!exact&&.full_path_vector(x)[1]!=full_path_vector){
+          warning("The argument `exact` will be ignored when matching the path: ", origin_sub)
+        }
+        return(.makeFolderClass(full_path_vector))
+      }
+      if(n == 0){
+        stop("Cannot go the the parent directory for you are in the root path: ", origin_sub)
+      }
+      x_new <- .makeFolderClass(full_path_vector[-n])
+      .cache(x)[[get_google_URI(full_path_vector = full_path_vector[-n])]] <- x_new
+      return(x_new[[full_path_vector[n], exact = exact]])
     }
   }
   
@@ -109,17 +145,6 @@ setMethod("[[",signature("FolderClass"),function(x,i,exact =TRUE){
   .cache(x)[[name]]<-result
   result
 })
-# 
-# if(name=="#refresh_list#"){
-#   return(function()refresh_list(x))
-# }
-# if(name == "#file_names#"){
-#   return(.file_names(x))
-# }
-# if(name=="#file_sizes#"){
-#   return(.file_sizes(x))
-# }
-
 
 #' @inherit base::names
 #' @export
@@ -226,6 +251,11 @@ setMethod("[[",signature("FileClass"),function(x,i,exact = TRUE){
     }
     return(func3)
   }
+  if(name =="file_name"){
+    file_name <- .file_name(x)
+    return(basename(file_name))
+  }
+  
   func <- get(paste0(".",name))
   func(x)
   

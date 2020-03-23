@@ -185,12 +185,14 @@ upload_data_from_disk <- function(disk_path, bucket, file){
 
 
 #full_path_vector: either a path to a folder/file or an empty string
-list_files <-function(full_path_vector, delimiter = "/"){
+list_files <-function(full_path_vector, delimiter = "/", next_page_token= NULL){
     bucket <- full_path_vector[1]
     path_string <- get_combined_path(full_path_vector[-1], is_folder = TRUE)
     
-    url <- JSON_URL(bucket)
-    url=paste0(url,"/?delimiter=",delimiter,"&prefix=",path_string)
+    url <- paste0("https://storage.googleapis.com/storage/v1/b/",URLencode(bucket),"/o")
+    url <- paste0(url,"/?delimiter=",delimiter,
+                  "&prefix=",URLencode(path_string),
+                  "&pageToken=",next_page_token)
     auth <- get_token()
     r <- GET (
         url,
@@ -199,19 +201,18 @@ list_files <-function(full_path_vector, delimiter = "/"){
         )
     )
     catch_error(r)
-    query_result <- XML::xmlToList(xmlParse(content(r)))
-    files <- query_result[names(query_result)=="Contents"]
-    file_names <- vapply(files, function(x) x$Key, character(1),USE.NAMES =FALSE)
-    file_sizes <- vapply(files, function(x) x$Size, character(1),USE.NAMES =FALSE)
-    folders <- query_result[names(query_result)=="CommonPrefixes"]
-    folder_names <- vapply(folders,function(x) x$Prefix, character(1),USE.NAMES =FALSE)
+    query_result <-  jsonlite::fromJSON(content(r,as="text"))
+    file_names <- query_result$items$name
+    file_sizes <- query_result$items$size
+    folder_names <- query_result$prefixes
     ## Remove the prefix
     file_names <- substring(file_names,nchar(path_string)+1)
     folder_names <- substring(folder_names,nchar(path_string)+1)
     
     list(file_names = file_names, 
          file_sizes = file_sizes,
-         folder_names = folder_names)
+         folder_names = folder_names,
+         next_page_token = query_result$nextPageToken)
 }
 
 get_file_meta <- function(bucket,file){

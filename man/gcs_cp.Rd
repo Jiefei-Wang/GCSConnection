@@ -7,11 +7,13 @@
 gcs_cp(from, to, recursive = TRUE)
 }
 \arguments{
-\item{from, to}{Character(1). The path to the folder/file. At least one path must be
-a google URI. The function will do its best to guess whether the path is a file or a
-folder, but it is recommended to explicitly add a "/" at the end of the path for the folder path.}
+\item{from, to}{Character(1). The path to the folder/file. 
+At least one path must be a google URI. The function will do its 
+best to guess whether the path is a path to a file or a folder, but it is 
+recommended to explicitly add a "/" at the end of the path for 
+the folder path to exclude the possible mistake.}
 
-\item{recursive}{logical(1). Whether copy the files in the subfolders.}
+\item{recursive}{logical(1). Whether recursively copy the files in the subfolders.}
 }
 \value{
 No return value
@@ -24,14 +26,14 @@ Note that the existing destination file will be overwritten.
 \examples{
 tmp_path <- tempdir()
 ## Download a file to a disk
-gcs_cp("gs://genomics-public-data/NA12878.chr20.sample.bam",tmp_path)
+gcs_cp("gs://genomics-public-data/NA12878.chr20.sample.bam", tmp_path)
 ## Check the file existance
-file.exists(file.path(tmp_path,"NA12878.chr20.sample.bam"))
+file.exists(file.path(tmp_path, "NA12878.chr20.sample.bam"))
 
 ## Download all files in a path.
 ## The files in the subfolders will not be copied due to `recursive = FALSE`
-folder_path <- file.path(tmp_path,"example")
-gcs_cp("gs://genomics-public-data/",folder_path, recursive = FALSE)
+folder_path <- file.path(tmp_path, "example")
+gcs_cp("gs://genomics-public-data/", folder_path, recursive = FALSE)
 ## Check the file existance
 list.files(folder_path)
 
