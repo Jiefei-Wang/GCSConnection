@@ -1,7 +1,7 @@
 Package: GCSConnection
 Type: Package
 Title: Creating R Connection with Google Cloud Storage
-Version: 0.99.5
+Version: 0.99.6
 Date: 2019-10-24
 Author: Jiefei Wang
 Maintainer: Jiefei Wang <szwjf08@gmail.com>
@@ -12,7 +12,7 @@ Description:
   to view and manage files on Google Cloud.
 License: GPL (>= 2)
 Depends: 
-  R (>= 3.6.0)
+  R (>= 4.0.0)
 Imports: 
   Rcpp (>= 1.0.2),
   httr,
