@@ -38,7 +38,7 @@ test_that("gcs_dir: go to path",{
 
 
 test_that("gcs_dir: build connection/download file/delete file",{
-    x<-gcs_dir(URI)
+    x <- gcs_dir(URI)
     
     ## build connection
     con <- x$get_connection(open = "rb")
@@ -77,15 +77,15 @@ test_that("gcs_cp: download file", {
     ## Destination is a folder path
     ## The file name is the same as the file name in the cloud
     for(end in c("","/")){
-    tmp_folder_path <- paste0(tmp_path, end)
-    gcs_cp(from = URI, to = tmp_folder_path)
-    ## Check result
-    tmp_file_path <- file.path(tmp_path,x$file_name)
-    expect_true(file.exists(tmp_file_path))
-    expect_true(as.numeric(x$file_size) == file.size(tmp_file_path))
-    
-    if(file.exists(tmp_file_path))
-        file.remove(tmp_file_path)
+        tmp_folder_path <- paste0(tmp_path, end)
+        gcs_cp(from = URI, to = tmp_folder_path)
+        ## Check result
+        tmp_file_path <- file.path(tmp_path,x$file_name)
+        expect_true(file.exists(tmp_file_path))
+        expect_true(as.numeric(x$file_size) == file.size(tmp_file_path))
+        
+        if(file.exists(tmp_file_path))
+            file.remove(tmp_file_path)
     }
 })
 

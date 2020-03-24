@@ -105,11 +105,10 @@ standardize_file_path<- function(x, check_type = TRUE){
         x_std <- normalizePath(x, winslash ="/" ,mustWork = FALSE)
         ## If file exist, check whether it is a folder or a file
         ## Add "/" at the end if it is a folder
-        if(check_type&&
-           !endsWith(x,"/") && 
+        if(check_type &&
            file.exists(x_std)){
             info <- file.info(x_std)
-            if(info$isdir)
+            if(info$isdir&&!endsWith(x_std, "/"))
                 x_std =paste0(x_std,"/")
         }
     }
