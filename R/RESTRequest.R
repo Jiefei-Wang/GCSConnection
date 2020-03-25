@@ -224,6 +224,9 @@ get_file_meta <- function(bucket,file){
             Authorization = get_token()
         )
     )
+    if(status_code(r) == 404 && !endsWith(file,"/")){
+        stop("The file is not found. maybe you forget to add a `/` at the end?")
+    }
     catch_error(r)
     file_header <- headers(r)
     file_header
