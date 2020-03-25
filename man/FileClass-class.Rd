@@ -6,5 +6,6 @@
 \alias{.FileClass}
 \title{File class}
 \description{
-The file class object can be accessed via `$` and `[[` operators.
+The properties of file class object can be accessed via `$` and `[[` operators.
+The symbol `..` can be used to go to the parent folder of a file class object.
 }

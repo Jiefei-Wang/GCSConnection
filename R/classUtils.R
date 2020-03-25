@@ -129,6 +129,26 @@ match_name<-function(x,i,exact){
     name
 }
 
+find_true_path<-function(full_path_vector){
+    removed_path <- rep(FALSE, length(full_path_vector))
+    for(i in seq_along(full_path_vector)){
+        if(full_path_vector[i] == ".."){
+            count <- 2
+            for(j in rev(seq_len(i))){
+                if(!removed_path[j]){
+                    removed_path[j] <- TRUE
+                    count <- count -1
+                }
+                if(count == 0)
+                    break
+            }
+            if(count != 0)
+                stop("Cannot go the the parent directory for you are in the root path!")
+        }
+    }
+    full_path_vector[!removed_path]
+}
+
 ##########################################
 ## file class utils
 ##########################################

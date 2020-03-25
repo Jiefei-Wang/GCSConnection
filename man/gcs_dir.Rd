@@ -23,8 +23,10 @@ only works with bucket/folder.}
 A `FolderClass` object or a `FileClass` object
 }
 \description{
-Get a list of objects in a bucket/folder if the path ends with `/`.
-Otherwise, get the description of a file.
+list objects in a bucket/folder or get the description of a file.
+You can change the current direction via `[[` or `$` operator. `..` can be
+used to go to the parent folder. For reducing the number of request sent to the network, 
+it is recommended to add a trailing slash if the path is a folder.
 }
 \examples{
 ## List files in a bucket

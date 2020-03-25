@@ -104,10 +104,9 @@ gcs_connection <- function(description,
 #' Note that the existing destination file will be overwritten.
 #' 
 #' @param from,to Character(1). The path to the folder/file. 
-#' At least one path must be a google URI. The function will do its 
-#' best to guess whether the path is a path to a file or a folder, but it is 
-#' recommended to explicitly add a "/" at the end of the path for 
-#' the folder path to exclude the possible mistake. 
+#' At least one path must be a google URI. It is 
+#' recommended to explicitly add a "/" at the end of the path if 
+#' the path is a folder path. 
 #' @param recursive logical(1). Whether recursively copy the files in the subfolders.
 #' @return No return value
 #' @examples 
@@ -131,8 +130,8 @@ gcs_cp <- function(from, to, recursive = TRUE){
     if(!from_cloud&&!to_cloud)
         stop("Hey, I am a google cloud package. ",
              "Why do you use me to manage your disk file?")
-    from <- standardize_file_path(from, check_type = TRUE)
-    to <- standardize_file_path(to, check_type = TRUE)
+    from <- standardize_file_path(from)
+    to <- standardize_file_path(to)
     
     from_folder <- endsWith(from, "/")
     to_folder <- endsWith(to, "/")
@@ -168,13 +167,12 @@ gcs_cp_internal <- function(from, to, from_cloud,to_cloud,is_folder, recursive){
                 answer <- tolower(answer)
                 if(answer == "y"){
                     repeat{
-                        message("round")
                         token <- results$next_page_token
                         results <- list_files(info$full_path_vector,
                                               delimiter = delimiter,
                                               next_page_token = token)
                         subfile_names <- c(subfile_names,results$file_names)
-                        if(is.null(results$next_page_token))
+                        if(length(results$file_names) != 1000)
                             break
                     }
                 }else{
@@ -206,30 +204,24 @@ gcs_cp_internal <- function(from, to, from_cloud,to_cloud,is_folder, recursive){
         ## If path is a single file
         if(from_cloud){
             info <- decompose_google_URI(from)
-            from <- list(
-                bucket = info$bucket,
-                file = info$path_string
-            )
+            from <- info$full_path_vector
         }
         if(to_cloud){
             info <- decompose_google_URI(to)
-            to <- list(
-                bucket = info$bucket,
-                file = info$path_string
-            )
+            to <- info$full_path_vector
         }else{
             dir.create(dirname(to), showWarnings = FALSE,recursive=TRUE)
         }
-        if(from_cloud&&to_cloud){
+        if(from_cloud && to_cloud){
             copy_data_on_cloud(from, to)
             return(invisible())
         }
         if(from_cloud){
-            download_data_to_disk(from$bucket, from$file, to)
+            download_data_to_disk(from, to)
             return(invisible())
         }
         if(to_cloud){
-            upload_data_from_disk(from, to$bucket, to$file)
+            upload_data_from_disk(from, to)
             return(invisible())
         }
     }
@@ -239,8 +231,10 @@ gcs_cp_internal <- function(from, to, from_cloud,to_cloud,is_folder, recursive){
 
 #' List bucket/folder/object
 #' 
-#' Get a list of objects in a bucket/folder if the path ends with `/`.
-#' Otherwise, get the description of a file.
+#' list objects in a bucket/folder or get the description of a file.
+#' You can change the current direction via `[[` or `$` operator. `..` can be
+#' used to go to the parent folder. For reducing the number of request sent to the network, 
+#' it is recommended to add a trailing slash if the path is a folder.
 #' 
 #' @param path Character(1), the path to the bucket/folder/file.
 #' @param delimiter Logical(1), whether to use `/` as a path delimiter. If not, 
@@ -265,11 +259,17 @@ gcs_cp_internal <- function(from, to, from_cloud,to_cloud,is_folder, recursive){
 #' @export
 gcs_dir<-function(path, delimiter =  TRUE ,recursive = FALSE, depth = 2L){
     info <-  decompose_google_URI(path)
+    is_folder <- info$is_folder && delimiter
+    
     ## Determine whether the path is a file path or a folder path
     ## If delimiter is not used, the path must be a file path
-    if(!info$is_folder||!delimiter){
-        ## If the file ends with a `/`
-        ## Add the missing `/`
+    if(delimiter && !is_folder){
+        if(exist_folder(info$full_path_vector)){
+            info <-  decompose_google_URI(path, is_folder = TRUE)
+            is_folder <- TRUE
+        }
+    }
+    if(!is_folder){
         .makeFileClass(full_path_vector = info$full_path_vector)
     }else{
         .makeFolderClass(full_path_vector = info$full_path_vector,

@@ -54,7 +54,10 @@ printable_size <-function(size_list){
 }
 
 is_google_uri <- function(x){
-    nchar(x)>=5 && substr(x,1,5)=="gs://"
+    if(startsWith(x,"gcs://")){
+        stop("The URI should start with `gs://`")
+    }
+    startsWith(x,"gs://")
 }
 get_google_URI <- function(bucket, file, full_path_vector = NULL) {
     if(!is.null(full_path_vector)){
@@ -99,16 +102,14 @@ digest_path <- function(description, bucket = NULL) {
 }
 ## The input should be either a file path in disk or a google cloud URI
 ## Used by gcs_cp
-standardize_file_path<- function(x, check_type = TRUE){
+standardize_file_path<- function(x){
     is_cloud_path <- is_google_uri(x)
     if(!is_cloud_path){
         x_std <- normalizePath(x, winslash ="/" ,mustWork = FALSE)
-        ## If file exist, check whether it is a folder or a file
         ## Add "/" at the end if it is a folder
-        if(check_type &&
-           file.exists(x_std)){
+        if(!endsWith(x_std, "/")&&file.exists(x_std)){
             info <- file.info(x_std)
-            if(info$isdir&&!endsWith(x_std, "/"))
+            if(info$isdir)
                 x_std =paste0(x_std,"/")
         }
     }
@@ -117,6 +118,9 @@ standardize_file_path<- function(x, check_type = TRUE){
         if(is.na(info$bucket))
             stop("Illigal path: ",x)
         x_std <- info$URI
+        if(!endsWith(x_std, "/") && exist_folder(info$full_path_vector)){
+            x_std =paste0(x_std,"/")
+        }
     }
     x_std
 }

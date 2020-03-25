@@ -8,10 +8,9 @@ gcs_cp(from, to, recursive = TRUE)
 }
 \arguments{
 \item{from, to}{Character(1). The path to the folder/file. 
-At least one path must be a google URI. The function will do its 
-best to guess whether the path is a path to a file or a folder, but it is 
-recommended to explicitly add a "/" at the end of the path for 
-the folder path to exclude the possible mistake.}
+At least one path must be a google URI. It is 
+recommended to explicitly add a "/" at the end of the path if 
+the path is a folder path.}
 
 \item{recursive}{logical(1). Whether recursively copy the files in the subfolders.}
 }

@@ -6,33 +6,49 @@ URI <-
     "gs://genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
 
 test_that("gcs_dir: get information of the folders",{
-    ## four ways to specify path
+    ## four ways to specify a bucket
     expect_error(gcs_dir("gs://genomics-public-data"),NA)
     expect_error(gcs_dir("genomics-public-data"),NA)
     expect_error(gcs_dir("gs://genomics-public-data/"),NA)
     expect_error(gcs_dir("genomics-public-data/"),NA)
     
-    x<-gcs_dir("genomics-public-data")
+    ## four ways to specify a folder
+    expect_error(gcs_dir("gs://genomics-public-data/clinvar"),NA)
+    expect_error(gcs_dir("genomics-public-data/clinvar"),NA)
+    expect_error(gcs_dir("gs://genomics-public-data/clinvar/"),NA)
+    expect_error(gcs_dir("genomics-public-data/clinvar/"),NA)
     
+    ## Check object type
+    x<-gcs_dir("genomics-public-data")
     expect_true(is(x$`NA12878.chr20.sample.DeepVariant-0.7.2.vcf`, "FileClass"))
     expect_true(is(x$`1000-genomes-phase-3/`, "FolderClass"))
 })
 
 test_that("gcs_dir: go to path",{
-    ## four ways to specify path
     expect_error(x <- gcs_dir("gs://genomics-public-data/clinvar/"),NA)
+    ## Go to cloud root
     expect_error(x[["../"]],NA)
+    expect_error(x[["../.."]],NA)
+    expect_error(x[["../../genomics-public-data"]],NA)
+    expect_error(x[["../../genomics-public-data/clinvar"]],NA)
+    
+    ## Five ways to specify path
     expect_error(name1 <- .file_names(x[["../1000-genomes/"]]),NA)
     expect_error(name2 <- .file_names(x[["../1000-genomes"]]),NA)
     expect_error(name3 <- .file_names(x[["./../1000-genomes"]]),NA)
     expect_error(name4 <- .file_names(x[["/../1000-genomes"]]),NA)
-    expect_error(name5 <- .file_names(x$`/../1000-genomes`),NA)
+    expect_error(name5 <- .file_names(x$`..`$`1000-genomes`),NA)
     expect_equal(name1,name2)
     expect_equal(name1,name3)
     expect_equal(name1,name4)
     expect_equal(name1,name5)
     
-    expect_true(is(x[["/../1000-genomes/README"]], "FileClass"))
+    b <- x[["/../1000-genomes/README"]]
+    expect_true(is(b, "FileClass"))
+    ## Go backward
+    expect_error(b$`..`,NA)
+    expect_error(b$`..`$`..`,NA)
+    
 })
 
 

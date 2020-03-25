@@ -1,7 +1,8 @@
 #' Folder class
 #'  
-#' view and access files. The Folder class object can be accessed
-#'  via `$` and `[[` operators.
+#' view and access files. You can change the current directory by
+#' `$` and `[[` operators. The symbol `..` can be used to go to the parent
+#' folder of a folder object.
 #' 
 #' @export
 .FolderClass <- setClass("FolderClass",representation = list(full_path_vector = "character",
@@ -15,11 +16,15 @@
 ## full_path_vector: The first element is the bucket name, 
 ## the rest is a vector of folder names
 .makeFolderClass<-function(full_path_vector,recursive = FALSE,depth = 2L){
+  if(length(full_path_vector)==0){
+    full_path_vector <- character(0)
+  }
   x <- .FolderClass()
   .full_path_vector(x) <- full_path_vector
   .recursive(x) <- recursive
   .depth(x) <- depth
-  x <- refresh_list(x)
+  if(length(.full_path_vector(x))!=0)
+    x <- refresh_list(x)
   x
 }
 #' Print object of class `FolderClass`
@@ -29,6 +34,10 @@
 #' @export
 setMethod("show", signature("FolderClass"), function(object){
   n_file <- length(.file_names(object))
+  if(length(.full_path_vector(object))==0){
+    cat("Cloud Root\n")
+    return(invisible(NULL))
+  }
   if(length(.full_path_vector(object))==1){
     cat(n_file, " items in the bucket `",
         .full_path_vector(object),"`:\n",sep ="")
@@ -85,25 +94,8 @@ setMethod("[[",signature("FolderClass"),function(x,i,exact =TRUE){
       info <- decompose_google_URI(i)
       path_vector <- info$full_path_vector
       path_vector <- path_vector[path_vector != ""]
-      
       full_path_vector <- c(.full_path_vector(x),path_vector)
-      removed_path <- rep(FALSE, length(full_path_vector))
-      for(i in seq_along(full_path_vector)){
-        if(full_path_vector[i] == ".."){
-          count <- 2
-          for(j in rev(seq_len(i))){
-            if(!removed_path[j]){
-              removed_path[j] <- TRUE
-              count <- count -1
-            }
-            if(count == 0)
-              break
-          }
-          if(count != 0)
-            stop("Cannot go the the parent directory for you are in the root path: ", origin_sub)
-        }
-      }
-      full_path_vector <- full_path_vector[!removed_path]
+      full_path_vector <- find_true_path(full_path_vector)
       n <- length(full_path_vector)
       if(n == 1){
         ## If switch between bucket
@@ -113,11 +105,12 @@ setMethod("[[",signature("FolderClass"),function(x,i,exact =TRUE){
         return(.makeFolderClass(full_path_vector))
       }
       if(n == 0){
-        stop("Cannot go the the parent directory for you are in the root path: ", origin_sub)
-      }
+        return(.makeFolderClass(full_path_vector))
+      }else{
       x_new <- .makeFolderClass(full_path_vector[-n])
       .cache(x)[[get_google_URI(full_path_vector = full_path_vector[-n])]] <- x_new
       return(x_new[[full_path_vector[n], exact = exact]])
+      }
     }
   }
   
@@ -158,7 +151,9 @@ setMethod("names",signature("FolderClass"),function(x){
 
 #' File class
 #' 
-#' The file class object can be accessed via `$` and `[[` operators.
+#' The properties of file class object can be accessed via `$` and `[[` operators.
+#' The symbol `..` can be used to go to the parent folder of a file class object.
+#' 
 #' @export
 .FileClass = setClass("FileClass",
                       representation = list(
@@ -177,11 +172,13 @@ setMethod("names",signature("FolderClass"),function(x){
   .full_path_vector(x) <- full_path_vector
   .bucket_name(x) <- full_path_vector[1]
   .file_name(x) <- paste0(full_path_vector[-1], collapse = "/")
-  file_info <- get_file_meta(.bucket_name(x), .file_name(x))
-  .file_size(x) <- file_info$`content-length`
-  .file_type(x) <- file_info$`content-type`
-  .URI(x) <- get_google_URI(.bucket_name(x), .file_name(x))
-  .lastModified(x) <- file_info$`last-modified`
+  
+  file_info <- get_file_meta(full_path_vector)
+  .file_size(x) <- file_info$`size`
+  .file_type(x) <- file_info$`contentType`
+  .lastModified(x) <- file_info$`updated`
+  
+  .URI(x) <- get_google_URI(full_path_vector = full_path_vector)
   x
 }
 #' Print object of class `FileClass`
@@ -221,8 +218,14 @@ setMethod("$",signature("FileClass"),function(x,name){
 #' @export
 setMethod("[[",signature("FileClass"),function(x,i,exact = TRUE){
   if(is.character(i)){
-    path_all <- strsplit(i,"/.+",fixed = TRUE)
-    # if(length(path_all) >1)
+    if(startsWith(i,"..")){
+      info <- decompose_google_URI(i)
+      path_vector <- info$full_path_vector
+      path_vector <- path_vector[path_vector != ""]
+      full_path_vector <- c(.full_path_vector(x),path_vector)
+      full_path_vector <- find_true_path(full_path_vector)
+      return(.makeFolderClass(full_path_vector))
+    }
   }
   name <- match_name(x, i, exact)
   if(is.null(name)){
@@ -241,7 +244,7 @@ setMethod("[[",signature("FileClass"),function(x,i,exact = TRUE){
         answer <- readline()
         if(tolower(answer)=="n") return()
       }
-      delete_file(.bucket_name(x),.file_name(x))
+      delete_file(.full_path_vector(x))
     }
     return(func2)
   }
@@ -255,6 +258,8 @@ setMethod("[[",signature("FileClass"),function(x,i,exact = TRUE){
     file_name <- .file_name(x)
     return(basename(file_name))
   }
+  
+  
   
   func <- get(paste0(".",name))
   func(x)

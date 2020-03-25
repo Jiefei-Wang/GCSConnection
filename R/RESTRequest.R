@@ -10,9 +10,41 @@ catch_error<-function(r){
     invisible(r)
 }
 
+JSON_URL <- function(full_path_vector, method = ""){
+    bucket <- URLencode(full_path_vector[1], reserved = TRUE)
+    if(length(full_path_vector)>1){
+        file <- URLencode(get_combined_path(full_path_vector[-1],is_folder = FALSE), 
+                          reserved = TRUE)
+        paste0("https://storage.googleapis.com/",method,"storage/v1/b/",bucket,"/o/",file)
+    }else{
+        paste0("https://storage.googleapis.com/",method,"storage/v1/b/",bucket,"/o")
+    }
+}
+JSON_upload_URL <- function(bucket, file, resumable = TRUE) {
+    URL <- JSON_URL(full_path_vector = bucket, method = "upload/")
+    file <- URLencode(file, reserved = TRUE)
+    if(resumable)
+        upload_type <- "resumable"
+    else
+        upload_type <- "media"
+    paste0(URL,
+        "?uploadType=",upload_type,
+        "&name=",file
+    )
+}
 
 
-JSON_URL <- function(bucket, file = NULL) {
+
+# JSON_URL <- function(bucket, file = NULL) {
+#     bucket <- URLencode(bucket)
+#     if(is.null(file)){
+#         paste0("https://storage.googleapis.com/", bucket)
+#     }else{
+#         file <- URLencode(file)
+#         paste0("https://storage.googleapis.com/", bucket, "/", file)
+#     }
+# }
+XML_URL <- function(bucket, file = NULL) {
     bucket <- URLencode(bucket)
     if(is.null(file)){
         paste0("https://storage.googleapis.com/", bucket)
@@ -21,31 +53,7 @@ JSON_URL <- function(bucket, file = NULL) {
         paste0("https://storage.googleapis.com/", bucket, "/", file)
     }
 }
-XML_URL <- function(bucket, file = NULL) {
-    bucket <- URLencode(bucket)
-    if(is.null(file)){
-        paste0("https://",bucket,".storage.googleapis.com/")
-    }else{
-        file <- URLencode(file)
-        paste0("https://",bucket,".storage.googleapis.com/",file)
-    }
-}
 
-
-JSON_upload_URL <- function(bucket, file, resumable = TRUE) {
-    bucket <- URLencode(bucket)
-    file <- URLencode(file)
-    if(resumable)
-        upload_type <- "resumable"
-    else
-        upload_type <- "media"
-    paste0(
-        "https://storage.googleapis.com/upload/storage/v1/b/",
-        bucket,
-        "/o?uploadType=",upload_type,"&name=",
-        file
-    )
-}
 
 
 
@@ -139,24 +147,32 @@ get_current_range <- function(signed_url) {
     }
 }
 
-copy_data_on_cloud <- function(from, to){
+
+##################################################
+## For gcs_cp and gcs_dir
+##################################################
+
+copy_data_on_cloud <- function(from_full_path_vector, to_full_path_vector){
+    from_URI <- JSON_URL(from_full_path_vector)
+    to_bucket <- URLencode(to_full_path_vector[1], reserved = TRUE)
+    to_file <- URLencode(get_combined_path(to_full_path_vector[-1], is_folder = FALSE), reserved = TRUE)
+    URI <- paste0(from_URI
+                  ,"/copyTo/b/",to_bucket,
+                  "/o/",to_file)
     auth <- get_token()
-    from_ul <- paste0(from$bucket,"/",from$file)
-    to_url <- JSON_URL(to$bucket, to$file)
-    r <- PUT(
-        to_url,
+    r <- POST(
+        URI,
         add_headers(
-            Authorization = get_token(),
-            `x-goog-copy-source` = from_ul
-        ),
-        body = NULL
+            Authorization = get_token()
+        )
     )
     catch_error(r)
 }
 
 
-download_data_to_disk <- function(bucket, file , disk_path){
-    url <- JSON_URL(bucket,file)
+download_data_to_disk <- function(full_path_vector, disk_path){
+    root_url <- JSON_URL(full_path_vector)
+    url <- paste0(root_url,"?alt=media")
     auth <- get_token()
     
     r <- GET(url,
@@ -171,7 +187,9 @@ download_data_to_disk <- function(bucket, file , disk_path){
     catch_error(r)
 }
 
-upload_data_from_disk <- function(disk_path, bucket, file){
+upload_data_from_disk <- function(disk_path, full_path_vector){
+    bucket <- full_path_vector[1]
+    file <- get_combined_path(full_path_vector[-1], is_folder = FALSE)
     url <- JSON_upload_URL(bucket, file, resumable = FALSE)
     r <- POST(
         url,
@@ -185,13 +203,14 @@ upload_data_from_disk <- function(disk_path, bucket, file){
 
 
 #full_path_vector: either a path to a folder/file or an empty string
-list_files <-function(full_path_vector, delimiter = "/", next_page_token= NULL){
+list_files <-function(full_path_vector, delimiter = "/", 
+                      next_page_token= NULL){
     bucket <- full_path_vector[1]
     path_string <- get_combined_path(full_path_vector[-1], is_folder = TRUE)
-    
-    url <- paste0("https://storage.googleapis.com/storage/v1/b/",URLencode(bucket),"/o")
-    url <- paste0(url,"/?delimiter=",delimiter,
-                  "&prefix=",URLencode(path_string),
+                             
+    toor_url <- JSON_URL(bucket)
+    url <- paste0(toor_url,"/?delimiter=",delimiter,
+                  "&prefix=",URLencode(path_string,reserved = TRUE),
                   "&pageToken=",next_page_token)
     auth <- get_token()
     r <- GET (
@@ -215,25 +234,36 @@ list_files <-function(full_path_vector, delimiter = "/", next_page_token= NULL){
          next_page_token = query_result$nextPageToken)
 }
 
-get_file_meta <- function(bucket,file){
-    url<-JSON_URL(bucket,file)
+get_file_meta <- function(full_path_vector, noError = FALSE){
+    root_url <- JSON_URL(full_path_vector)
+    url <- paste0(root_url, "?alt=json")
     auth <- get_token()
-    r <- HEAD (
+    r <- GET(
         url,
         add_headers(
             Authorization = get_token()
         )
     )
-    if(status_code(r) == 404 && !endsWith(file,"/")){
-        stop("The file is not found. maybe you forget to add a `/` at the end?")
+    if(status_code(r) == 404 && noError){
+        return(NULL)
     }
+    # if(status_code(r) == 404 && !endsWith(file,"/")){
+    #     stop("The file is not found. maybe you forget to add a `/` at the end?")
+    # }
     catch_error(r)
-    file_header <- headers(r)
-    file_header
+    content(r)
 }
 
-delete_file<-function(bucket,file){
-    url<-JSON_URL(bucket,file)
+exist_file <- function(full_path_vector){
+    !is.null(get_file_meta(full_path_vector=full_path_vector, noError = TRUE))
+}
+exist_folder <- function(full_path_vector){
+    res <- list_files(full_path_vector)
+    length(res$file_names)!=0 || length(res$folder_names)!=0
+}
+
+delete_file<-function(full_path_vector){
+    url<-JSON_URL(full_path_vector)
     auth <- get_token()
     r <- DELETE(
         url,

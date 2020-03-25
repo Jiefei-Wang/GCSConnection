@@ -1,7 +1,7 @@
 Package: GCSConnection
 Type: Package
 Title: Creating R Connection with Google Cloud Storage
-Version: 0.99.7
+Version: 0.99.8
 Date: 2019-10-24
 Author: Jiefei Wang
 Maintainer: Jiefei Wang <szwjf08@gmail.com>
@@ -28,6 +28,6 @@ Suggests:
     BiocStyle
 biocViews: Infrastructure
 LinkingTo: Rcpp
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 Encoding: UTF-8
 VignetteBuilder: knitr

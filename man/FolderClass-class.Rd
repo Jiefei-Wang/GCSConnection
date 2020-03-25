@@ -6,11 +6,13 @@
 \alias{.FolderClass}
 \title{Folder class
  
-view and access files. The Folder class object can be accessed
- via `$` and `[[` operators.}
+view and access files. You can change the current directory by
+`$` and `[[` operators. The symbol `..` can be used to go to the parent
+folder of a folder object.}
 \description{
 Folder class
  
-view and access files. The Folder class object can be accessed
- via `$` and `[[` operators.
+view and access files. You can change the current directory by
+`$` and `[[` operators. The symbol `..` can be used to go to the parent
+folder of a folder object.
 }

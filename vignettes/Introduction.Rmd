@@ -100,36 +100,40 @@ Besides manually creating a connection, the package provides a simple and convin
 x <- gcs_dir("gs://genomics-public-data/clinvar/")
 x
 ```
-Note that for listing files in a bucket, the last `/` symbol is not required. However, if you want to list files in a folder inside a bucket, you must include the `/` symbol. In fact, there is no hierarchical structure in a bucket, all files are in the same level. By using the slash delimiter, you can make the files appear as though they are sotred in folders.
+Note that for listing files in a bucket, the trailing slash does not make any differences. However, if you want to list files in a folder inside a bucket, it is recommended to explicitly add a `/` at the end. The trailing slash is not mandatory, but if no trailing slash presents, the package need one extra communication with the cloud to determine whether the path is a file or a folder, which can waste significant time in some cases.
 
-Once obtaining a list of files, you can move your current path or view the detail of a file through `$` or `[[` operator
+In fact, there is no hierarchical structure in a bucket, all files are in the same level. By using the slash delimiter, the cloud makes the files appear as though they are sotred in folders. Though the cloud does not have any restriction on the use of `/` of the file name, a good practice is to not use `/` at the end of the name for it can cause unnecessary confusion.
+
+Once obtaining a list of files, you can changes your current director or view the detail of a file through `$` or `[[` operator
 ```{r}
 ## equivalent: x$README.txt
-x[["README.txt"]]
+myfile <- x[["README.txt"]]
+myfile
 ```
 You can also use `..` to go to the parent folder
 ```{r}
 ## equivalent: x$`..`
 x[[".."]]
+myfile[[".."]]
 ```
 
 The connection can be made by
 ```{r}
-con <- x$README.txt$get_connection(open = "r")
+con <- myfile$get_connection(open = "r")
 con
 close(con)
 ```
 You can also query file info, copy, delete files through via the file manager
 ```{r}
 ## Get file name
-x$README.txt$file_name
+myfile$file_name
 
 ## copy file
 ## For the destination, you can specify a path to the file, 
 ## or a path to a folder.
 destination <-tempdir()
-x$README.txt$copy_to(destination)
-file.exists(file.path(destination,x$README.txt$file_name))
+myfile$copy_to(destination)
+file.exists(file.path(destination,myfile$file_name))
 
 ## Delete file, the function is excutable 
 ## only when you have the right to delete the file.
