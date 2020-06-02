@@ -29,11 +29,14 @@ You need to have a service account credentials to authenticate
 with Google Cloud Storage API. The credentials determines which data sources
 are accessable to you. Please follow the instructions on [Google
 Authentication][] to create your credentials file and download it to
-your local machine. The package will search for the credentials file from
+your local machine(Note that it can be done in the Cloud Console). 
+The package will search for the credentials file from
 the environment variable `GOOGLE_APPLICATION_CREDENTIALS` when it is
 loaded. If it fails to find the credentials, it will look for the
 environment variable `GCS_AUTH_FILE` instead. If both environment
-variables are empty, you will only be able to access public data. If you set the environment variables after the package is loaded, you can redo the authentication by `gcs_cloud_auth()`.
+variables are empty, you will only be able to access public data. 
+If you set the environment variables after the package is loaded, you can rerun the auto
+authentication by `gcs_cloud_auth()`.
 
 ## Manual authentication
 The function `gcs_cloud_auth` provides two ways to authenticate with Google Cloud. When you have a service account credentials, you can authenticate with Google Cloud by calling `gcs_cloud_auth(credentials_file_path)`. The second method is to get credentials from [Cloud SDK][]. The package is able to interact with the command-line tool gcloud. Once the account has been set in the `gcloud` program, the package can be authenticated by `gcs_cloud_auth(gcloud = TRUE)`. By default, the package will use the first account in gcloud to authenticate with Google. If there are multiple accounts in gcloud, you can switch the account by `gcs_cloud_auth(gcloud = TRUE, email = "your email address")`. 
@@ -67,7 +70,7 @@ close(con)
 Note that you do not need a credentials for accessing the public data.
 the character "r" in the parameter `open` is an abbreviation of read, please see `?gcs_connection` for more details.
 
-It is also possible to specifying file and bucket name
+It is also possible to specify file and bucket name
 separately. For example:
 ```{r}
 file_name <- "NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
@@ -86,12 +89,12 @@ open mode in the `gcs_connection` function. Please note that due to
 the limitation of the Google Cloud Storage, the write connection is
 not seekable, which means you cannot use the `seek` function to
 navigate through the file. When the write connection is created. 
-It always starts in the beginning of the file. If there exist a file 
+It always starts in the beginning of the file. If there exists a file 
 with the same name, the old file will be deleted. After the write connection is closed, the file will become immutable and no further change on the file 
-data can be made.
+can be made.
 
-# create connections from file manager
-Besides manually creating a connection, the package provides a simple and convinent  S4 class to manage the files. You can list all files in a bucket/folder by
+# create connections from the file manager
+Besides manually creating a connection, the package provides a simple and convinent  S4 class to manage files. You can list all files in a bucket/folder by
 ```{r}
 ## These are equivalent
 ## x <- gcs_dir("gs://genomics-public-data/clinvar/")
@@ -100,11 +103,11 @@ Besides manually creating a connection, the package provides a simple and convin
 x <- gcs_dir("gs://genomics-public-data/clinvar/")
 x
 ```
-Note that for listing files in a bucket, the trailing slash does not make any differences. However, if you want to list files in a folder inside a bucket, it is recommended to explicitly add a `/` at the end. The trailing slash is not mandatory, but if no trailing slash presents, the package need one extra communication with the cloud to determine whether the path is a file or a folder, which can waste significant time in some cases.
+Note that for listing files in a bucket, the trailing slash does not make any differences. However, if you want to list files in a folder inside a bucket, it is recommended to explicitly add a `/` at the end. The trailing slash is not mandatory, but if no trailing slash presents, the package need one extra communication with the cloud to determine whether the path is a file or a folder, which can double your time cost.
 
-In fact, there is no hierarchical structure in a bucket, all files are in the same level. By using the slash delimiter, the cloud makes the files appear as though they are sotred in folders. Though the cloud does not have any restriction on the use of `/` of the file name, a good practice is to not use `/` at the end of the name for it can cause unnecessary confusion.
+In fact, there is no hierarchical structure in a bucket, all files are in the same level. By using the slash delimiter, the cloud makes the files appear as though they are stored in folders. Though the cloud does not have any restriction on the use of `/` in the file name, a good practice is to not use `/` at the end of a file name for it can cause unnecessary confusion.
 
-Once obtaining a list of files, you can changes your current director or view the detail of a file through `$` or `[[` operator
+Once obtaining a list of files, you can changes your current directory or view the detail of a file through `$` or `[[` operator
 ```{r}
 ## equivalent: x$README.txt
 myfile <- x[["README.txt"]]
