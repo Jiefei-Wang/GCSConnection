@@ -14,8 +14,8 @@
 
 \item{name, i}{Character(1), the name of the element}
 
-\item{exact}{Logical(1), Controls possible partial matching
-of `[[` when extracting by a character(1)}
+\item{exact}{Logical(1), Controls possible partial matching of `[[`
+when extracting by a character(1)}
 }
 \value{
 A `FolderClass` object or a `FileClass` object

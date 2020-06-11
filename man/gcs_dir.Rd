@@ -9,26 +9,30 @@ gcs_dir(path, delimiter = TRUE, recursive = FALSE, depth = 2L)
 \arguments{
 \item{path}{Character(1), the path to the bucket/folder/file.}
 
-\item{delimiter}{Logical(1), whether to use `/` as a path delimiter. If not, 
-the path will be treated as the path to a file even when it ends with `/`}
+\item{delimiter}{Logical(1), whether to use `/` as a path
+delimiter. If not, the path will be treated as the path to a
+file even when it ends with `/`}
 
-\item{recursive}{Logical(1), whether recursively query all subdirectory.
-If `TRUE`, all information of the subdirectories will be downloaded. The 
-time cost can be significantly reduced if the value is `FALSE`. The parameter
-only works with bucket/folder.}
+\item{recursive}{Logical(1), whether recursively query all
+subdirectory.  If `TRUE`, all information of the subdirectories
+will be downloaded. The time cost can be significantly reduced
+if the value is `FALSE`. The parameter only works with
+bucket/folder.}
 
 \item{depth}{Integer(1), the depth of the recursive download.}
 }
 \value{
-A `FolderClass` object or a `FileClass` object
+`FolderClass` object or a `FileClass` object
 }
 \description{
 list objects in a bucket/folder or get the description of a file.
-You can change the current direction via `[[` or `$` operator. `..` can be
-used to go to the parent folder. For reducing the number of request sent to the network, 
-it is recommended to add a trailing slash if the path is a folder.
+You can change the current direction via `[[` or `$` operator. `..`
+can be used to go to the parent folder. For reducing the number of
+request sent to the network, it is recommended to add a trailing
+slash if the path is a folder.
 }
 \examples{
+
 ## List files in a bucket
 ## Equivalent: gcs_dir(path = "gs://genomics-public-data/")
 gcs_dir(path = "genomics-public-data/")
@@ -38,4 +42,5 @@ gcs_dir(path = "genomics-public-data/clinvar/")
 
 ## List the information of a file
 gcs_dir(path = "genomics-public-data/clinvar/README.txt")
+
 }

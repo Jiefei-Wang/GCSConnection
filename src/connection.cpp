@@ -18,8 +18,6 @@ using namespace Rcpp;
 using std::string;
 
 
-
-
 typedef struct bucketCon* bucketConnection;
 #define R_EOF -1
 
@@ -147,7 +145,6 @@ static size_t read_connection(void* target, size_t size, size_t nitems, Rconnect
 }
 
 
-
 static size_t write_connection_internal(void* target, size_t size, Rconnection con, bool final) {
 	bucketConnection bc = (bucketConnection)con->myprivate;
 	//Rprintf("begin file write:%lld bytes, off : %lld\n", size, bc->offset);
@@ -168,6 +165,7 @@ static size_t write_connection_internal(void* target, size_t size, Rconnection c
 		Rf_unprotect(1);
 	return size;
 }
+
 
 static size_t write_connection(const void* target, size_t size, size_t nitems, Rconnection con) {
 	size_t request_size = size * nitems;
@@ -195,9 +193,6 @@ static size_t write_connection(const void* target, size_t size, size_t nitems, R
 
 	return size * nitems;
 }
-
-
-
 
 
 static int get_byte_from_connection(Rconnection con) {
@@ -237,9 +232,6 @@ static double seek_connection(Rconnection con, double where, int origin, int rw)
 }
 
 
-
-
-
 // [[Rcpp::export]]
 SEXP get_bucket_connection(std::string bucket, std::string file,
 	bool isRead, bool istext, bool UTF8,
@@ -254,10 +246,10 @@ SEXP get_bucket_connection(std::string bucket, std::string file,
 	bc->offset = 0;
 	bc->signed_url = R_NilValue;
 	if (isRead) {
-		bc->file_url = make_call("XML_URL", wrap(bucket), wrap(file));
+		bc->file_url = make_call("xml_url", wrap(bucket), wrap(file));
 	}
 	else {
-		bc->file_url = make_call("JSON_upload_URL", wrap(bucket), wrap(file));
+		bc->file_url = make_call("json_upload_url", wrap(bucket), wrap(file));
 	}
 	R_PreserveObject(bc->file_url);
 

@@ -4,15 +4,9 @@
 \name{FolderClass-class}
 \alias{FolderClass-class}
 \alias{.FolderClass}
-\title{Folder class
- 
-view and access files. You can change the current directory by
-`$` and `[[` operators. The symbol `..` can be used to go to the parent
-folder of a folder object.}
+\title{Folder class}
 \description{
-Folder class
- 
-view and access files. You can change the current directory by
-`$` and `[[` operators. The symbol `..` can be used to go to the parent
+View and access files. You can change the current directory by `$`
+and `[[` operators. The symbol `..` can be used to go to the parent
 folder of a folder object.
 }
