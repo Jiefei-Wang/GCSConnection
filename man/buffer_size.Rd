@@ -23,11 +23,13 @@ Get functions: the current buffer size.
 Set functions: the previous buffer size.
 }
 \description{
-Get/Set read/write connection buffer size, the buffer size can be set at any time
-but only takes effect on the connections created after the change. The default
-value is 1024 *1024 bytes (1 Mega bytes) for both read and write connections.
+Get/Set read/write connection buffer size, the buffer size can be
+set at any time but only takes effect on the connections created
+after the change. The default value is 1024 *1024 bytes (1 Mega
+bytes) for both read and write connections.
 }
 \examples{
 gcs_get_read_buff()
 gcs_get_write_buff()
+
 }
