@@ -1,16 +1,3 @@
-package_settings <- new.env()
-
-package_settings[["credentials"]] <- NULL
-
-package_settings[["gcloud_account"]] <- NULL
-
-package_settings[["gcloud_credentials"]] <- FALSE
-
-package_settings[["gcloud_token_time"]] <- NULL
-
-package_settings[["input_buff_len"]] <- 1024L * 1024L
-
-package_settings[["output_buff_len"]] <- 1024L * 1024L
 
 
 my_ceiling <- function(x, digit) {
@@ -18,22 +5,20 @@ my_ceiling <- function(x, digit) {
 }
 
 
-is_folder_path <- function(x) {
-    path <- split_folder_path(x)
-    endsWith(x, "/") || length(path) == 1
+is_folder_path <- function(x){
+    endsWith(x, .delimiter())
 }
 
-
 split_folder_path <- function(x) {
-    res <- strsplit(x, "/", fixed = TRUE)[[1]]
+    res <- strsplit(x, .delimiter(), fixed = TRUE)[[1]]
     res
 }
 
 
 split_file_path <- function(x) {
-    res <- strsplit(x, "/", fixed = TRUE)[[1]]
-    if (endsWith(x, "/")) {
-        res[length(res)] <- paste0(res[length(res)], "/")
+    res <- strsplit(x, .delimiter(), fixed = TRUE)[[1]]
+    if (endsWith(x, .delimiter())) {
+        res[length(res)+1] <- ""
     }
     res
 }
@@ -41,11 +26,11 @@ split_file_path <- function(x) {
 
 ## The path is a vector of names without bucket
 get_combined_path <- function(path_vec, is_folder) {
-    combined_path <- paste0(path_vec, collapse = "/")
+    combined_path <- paste0(path_vec, collapse = .delimiter())
     if (is_folder &&
         length(path_vec) != 0 &&
-        !endsWith(combined_path, "/")) {
-        combined_path <- paste0(combined_path, "/")
+        !endsWith(combined_path, .delimiter())) {
+        combined_path <- paste0(combined_path, .delimiter())
     }
     combined_path
 }
@@ -81,25 +66,37 @@ is_google_uri <- function(x) {
     startsWith(x, "gs://")
 }
 
+is_uri_folder_path <- function(x) {
+    path <- split_folder_path(x)
+    length(path) == 1 || endsWith(x, .delimiter())
+}
 
-get_google_URI <- function(bucket, file, full_path_vector = NULL) {
+
+standardize_google_uri <- function(x){
+    if (!startsWith(x, "gs://")){
+        paste0("gs://", x)
+    }else{
+        x
+    }
+}
+
+get_google_uri <- function(bucket, file, full_path_vector = NULL) {
     if (!is.null(full_path_vector)) {
         bucket <- full_path_vector[1]
         file <- full_path_vector[-1]
     }
-    paste0("gs://", bucket, "/", paste0(file, collapse = "/"))
+    file_string <- get_combined_path(file, is_folder = FALSE)
+    paste0("gs://", bucket, .delimiter(), file_string)
 }
 
 
-decompose_google_URI <- function(x, is_folder = NULL) {
-    if (is_google_uri(x)) {
-        x <- substring(x, first = 6)
-    } else {
-        ## FIX ME
-    }
-
+decompose_google_uri <- function(x, is_folder = NULL) {
+    x_std <- standardize_google_uri(x)
+    
+    x <- substring(x_std, first = 6)
+    
     if (is.null(is_folder)) {
-        is_folder <- is_folder_path(x)
+        is_folder <- is_uri_folder_path(x)
     }
 
     if (is_folder) {
@@ -111,10 +108,9 @@ decompose_google_URI <- function(x, is_folder = NULL) {
     bucket <- full_path_vector[1]
     path_vector <- full_path_vector[-1]
     path_string <- get_combined_path(path_vector, is_folder)
-    URI <- get_google_URI(full_path_vector = full_path_vector)
 
     list(
-        URI = URI,
+        uri = x,
         bucket = bucket,
         path_vector = path_vector,
         full_path_vector = full_path_vector,
@@ -124,38 +120,40 @@ decompose_google_URI <- function(x, is_folder = NULL) {
 }
 
 
-digest_path <- function(description, bucket = NULL) {
-    if (is_google_uri(description)) {
-        bucket <- strsplit(description, "/")[[1]][3]
-        file <- sub(paste0("gs://", bucket, "/"), "", description)
-    } else {
-        file <- description
-    }
-    list(file = file, bucket = bucket)
-}
+# digest_path <- function(description, bucket = NULL) {
+#     if (is_google_uri(description)) {
+#         bucket <- strsplit(description, "/")[[1]][3]
+#         file <- sub(paste0("gs://", bucket, "/"), "", description)
+#     } else {
+#         file <- description
+#     }
+#     list(file = file, bucket = bucket)
+# }
 
 
-## The input should be either a file path in disk or a google cloud
-## URI used by gcs_cp
-standardize_file_path <- function(x) {
+## The input should be either a file path on a disk or a google cloud
+## URL used by gcs_cp
+## it will check the existance of the file/folder
+## and add a trailing slash if it is a folder.
+standardize_file_path <- function(x, user_pay = FALSE) {
     is_cloud_path <- is_google_uri(x)
     if (!is_cloud_path) {
-        x_std <- normalizePath(x, winslash = "/", mustWork = FALSE)
+        x_std <- normalizePath(x, winslash = .delimiter(), mustWork = FALSE)
         ## Add "/" at the end if it is a folder
-        if (!endsWith(x_std, "/") && file.exists(x_std)) {
+        if (!endsWith(x_std, .delimiter()) && file.exists(x_std)) {
             info <- file.info(x_std)
             if (info$isdir) {
-                x_std <- paste0(x_std, "/")
+                x_std <- paste0(x_std, .delimiter())
             }
         }
     }
     else {
-        info <- decompose_google_URI(x)
+        info <- decompose_google_uri(x)
         if (is.na(info$bucket)) {
             stop("Illegal path: ", x)
         }
-        x_std <- info$URI
-        if (!endsWith(x_std, "/") && exist_folder(info$full_path_vector)) {
+        x_std <- info$uri
+        if (!endsWith(x_std, "/") && exist_folder(info$full_path_vector,user_pay)) {
             x_std <- paste0(x_std, "/")
         }
     }
@@ -180,10 +178,11 @@ is_scalar_logical <- function(x) {
 
 update_gcloud_token <- function() {
     gcloud_cmd <- c("auth", "print-access-token",
-                    package_settings[["gcloud_account"]])
+                    .gcloud_account())
     tryCatch({
-        package_settings[["credentials"]] <-
+        .credentials(
             system2("gcloud", gcloud_cmd, stdout = TRUE)
+        )
     },
     warning = function(w) {
         stop(paste0(w$message, "\n"))
@@ -192,14 +191,14 @@ update_gcloud_token <- function() {
 
 
 get_token <- function() {
-    if (package_settings[["gcloud_credentials"]]) {
+    if (.is_gcloud()) {
         ## refresh token after 50 minutes
-        if (Sys.time() - package_settings[["gcloud_token_time"]] > 60 * 50) {
+        if (Sys.time() - .gcloud_token_time() > 60 * 50) {
             update_gcloud_token()
         }
-        paste0("Bearer ", package_settings[["credentials"]])
+        paste0("Bearer ", .credentials())
     } else {
-        creds <- package_settings[["credentials"]]
+        creds <- .credentials()
         if (is.null(creds)) {
             return(NULL)
         }
@@ -226,3 +225,4 @@ get_credentials_from_environment <- function() {
         return(creds)
     }
 }
+

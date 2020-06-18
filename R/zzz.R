@@ -3,8 +3,8 @@
 #' @importFrom googleAuthR gar_auth_service
 #' @import httr
 #' @import Rcpp
+#' @import methods
 #' @importFrom jsonlite fromJSON
-#' @importFrom methods setClass setMethod new is
 #' @importFrom utils URLencode
 NULL
 

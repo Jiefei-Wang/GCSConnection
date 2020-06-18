@@ -24,6 +24,7 @@ typedef struct bucketCon* bucketConnection;
 struct bucketCon {
 	SEXP file_url;
 	SEXP signed_url;
+	SEXP billing_project;
 	size_t file_size;
 	size_t offset;
 };
@@ -36,7 +37,7 @@ static Rboolean open_connection(Rconnection con) {
 	//Rprintf("file open\n");
 	bucketConnection bc = (bucketConnection)con->myprivate;
 	if (con->canread == TRUE) {
-		bc->file_size = as<size_t>(make_call("get_file_size", bc->file_url));
+		bc->file_size = as<size_t>(make_call("get_file_size", bc->file_url, bc->billing_project));
 		bc->offset = 0;
 		con->incomplete = bc->file_size != 0 ? TRUE : FALSE;
 		con->EOF_signalled = bc->file_size == 0 ? TRUE : FALSE;
@@ -61,12 +62,13 @@ static void destroy_connection(Rconnection con) {
 	//Wired behavior: No need to free the buffer since R will free it
 	//free(con->buff);
 
-	if (con->canwrite == TRUE) {
+	if (con->canwrite == TRUE&&bc->signed_url!=R_NilValue) {
 		write_connection_internal(con->buff, con->buff_stored_len, con, true);
 		make_call("stop_upload", bc->signed_url, wrap(bc->offset));
 		R_ReleaseObject(bc->signed_url);
 	}
 	R_ReleaseObject(bc->file_url);
+	R_ReleaseObject(bc->billing_project);
 
 }
 
@@ -109,7 +111,8 @@ static size_t read_connection(void* target, size_t size, size_t nitems, Rconnect
 		cloud_buff_size = bc->file_size - bc->offset > cloud_buff_size ? cloud_buff_size : bc->file_size - bc->offset;
 		//Rprintf("cloud_buff_size: %lld\n", cloud_buff_size);
 		if (cloud_buff_size > 0) {
-			SEXP result = Rf_protect(make_call("download_data", bc->file_url, wrap(bc->offset), wrap(bc->offset + cloud_buff_size - 1)));
+			SEXP result = Rf_protect(make_call("download_data", bc->file_url, wrap(bc->offset), 
+			wrap(bc->offset + cloud_buff_size - 1), bc->billing_project));
 			size_t cloud_read_size = XLENGTH(result);
 			//Rprintf("cloud_read_size: %lld\n", cloud_read_size);
 
@@ -233,34 +236,36 @@ static double seek_connection(Rconnection con, double where, int origin, int rw)
 
 
 // [[Rcpp::export]]
-SEXP get_bucket_connection(std::string bucket, std::string file,
-	bool isRead, bool istext, bool UTF8,
-	bool autoOpen, double buffLength,
-	string description, string openMode) {
+SEXP get_bucket_connection(string bucket, string file,
+	bool is_read, bool is_text, bool UTF8,
+	bool auto_open, double buff_length,
+	string description, string open_mode, SEXP billing_project) {
 
 	Rconnection con;
 	SEXP rc = PROTECT(R_new_custom_connection(description.c_str(),
-		openMode.c_str(), CONNECTION_CLASS, &con));
+		open_mode.c_str(), CONNECTION_CLASS, &con));
 
 	bucketConnection bc = new bucketCon();
 	bc->offset = 0;
 	bc->signed_url = R_NilValue;
-	if (isRead) {
+	bc-> billing_project = billing_project;
+	if (is_read) {
 		bc->file_url = make_call("xml_url", wrap(bucket), wrap(file));
 	}
 	else {
-		bc->file_url = make_call("json_upload_url", wrap(bucket), wrap(file));
+		bc->file_url = make_call("json_upload_url", wrap(bucket), wrap(file), wrap(true), bc->billing_project);
 	}
 	R_PreserveObject(bc->file_url);
+	R_PreserveObject(bc->billing_project);
 
 	con->incomplete = FALSE;
 	con->myprivate = bc;
-	con->canseek = isRead ? TRUE : FALSE;
-	con->canread = isRead ? TRUE : FALSE;
-	con->canwrite = (!isRead) ? TRUE : FALSE;
+	con->canseek = is_read ? TRUE : FALSE;
+	con->canread = is_read ? TRUE : FALSE;
+	con->canwrite = (!is_read) ? TRUE : FALSE;
 	con->isopen = FALSE;
 	con->blocking = TRUE;
-	con->text = istext ? TRUE : FALSE;
+	con->text = is_text ? TRUE : FALSE;
 	con->UTF8out = UTF8 ? TRUE : FALSE;
 	con->open = open_connection;
 	//con->close = close_connection;
@@ -270,14 +275,14 @@ SEXP get_bucket_connection(std::string bucket, std::string file,
 	con->fgetc = get_byte_from_connection;
 	con->fgetc_internal = get_byte_from_connection;
 	con->seek = seek_connection;
-	con->buff_len = buffLength;
+	con->buff_len = buff_length;
 	//No need to free the memory after usage.
 	con->buff = (unsigned char*)malloc(con->buff_len);
 	con->buff_pos = 0;
 	con->buff_stored_len = 0;
 
 
-	if (autoOpen) {
+	if (auto_open) {
 		Rboolean success = con->open(con);
 		if (!success) {
 			con->destroy(con);

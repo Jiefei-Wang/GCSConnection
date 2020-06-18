@@ -40,11 +40,7 @@ test_that("seek connection", {
   close(con)
 })
 
-test_that("credential access", {
-  expect_error(gcs_get_cloud_auth(), NA)
-  expect_error(gcs_cloud_auth(NULL), NA)
-  expect_error(gcs_get_cloud_auth(), NA)
-})
+
 
 test_that("buffer size", {
   n <- 64L

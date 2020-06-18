@@ -44,6 +44,7 @@ src/*.o
 src/*.dll
 src/*.so
 src/*.lib
+src/.vscode/*
 
 inst/test/
 inst/doc

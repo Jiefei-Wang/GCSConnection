@@ -1,0 +1,6 @@
+Changes in version 1.1.2
++ Support Requester Pays
++ Support `~` symbol to go to the bucket root
++ Support conversion from Folder/File class to character
+Changes in version 1.0.0
++ Publish in Bioconductor
