@@ -7,7 +7,7 @@
 gcs_cp(from, to, recursive = TRUE, user_pay = gcs_get_user_pay())
 }
 \arguments{
-\item{from, to}{Character(1). The path to the folder/file.  At least
+\item{from, to}{character(1). The path to the folder/file.  At least
 one path must be a google URL. It is recommended to explicitly
 add a trailing "/" if the parameter is a path to a folder.}
 

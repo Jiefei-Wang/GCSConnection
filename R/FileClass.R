@@ -37,7 +37,7 @@ setMethod("show", signature("FileClass"), function(object) {
 #' Get an element from `FileClass` object
 #'
 #' @param x an object of class `FileClass`
-#' @param name,i Character(1), the name of the element
+#' @param name,i character(1), the name of the element
 #' @return
 #' A `FolderClass` object or a `FileClass` object
 #' @rdname subset-FileClass-method

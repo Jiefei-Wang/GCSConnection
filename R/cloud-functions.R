@@ -132,7 +132,7 @@ gcs_connection <-
 #' bucket, disk to bucket and bucket to disk.  Note that the existing
 #' destination file will be overwritten.
 #'
-#' @param from,to Character(1). The path to the folder/file.  At least
+#' @param from,to character(1). The path to the folder/file.  At least
 #'     one path must be a google URL. It is recommended to explicitly
 #'     add a trailing "/" if the parameter is a path to a folder.
 #' @param recursive logical(1). Whether to recursively copy the files in
@@ -219,7 +219,7 @@ gcs_cp <- function(from, to, recursive = TRUE, user_pay = gcs_get_user_pay()) {
 #' request sent to the network, it is recommended to add a trailing
 #' slash if the path is a folder.
 #'
-#' @param path Character(1), the path to the bucket/folder/file.
+#' @param path character(1), the path to the bucket/folder/file.
 #' @param delimiter Logical(1), whether to use `/` as a path
 #'     delimiter. If not, the path will be treated as the path to a
 #'     file even when it ends with `/`
@@ -294,10 +294,10 @@ gcs_dir <- function(path, delimiter = TRUE, user_pay = gcs_get_user_pay()) {
 #' @param gcloud logical. Whether use gcloud to authenticate with
 #'     Google Cloud Storage.  If the value is `TRUE`, the parameter
 #'     `json_file` will be ignored. See details.
-#' @param email Character(1) or NULL. For gcloud only. Account to get
+#' @param email character(1) or NULL. For gcloud only. Account to get
 #'     the access token for.  If not specified, the current active
 #'     account in gcloud will be used.
-#' @param billing_project Character(1) or NULL. The project's ID which 
+#' @param billing_project character(1) or NULL. The project's ID which 
 #'     the charges will be sent to. If the value is not NULL, it will 
 #'     overwrite the default setting. See details.
 #' @details 
@@ -326,6 +326,7 @@ gcs_dir <- function(path, delimiter = TRUE, user_pay = gcs_get_user_pay()) {
 #'     `gcs_set_billing_project`.
 #'
 #' @rdname authentication
+#' @seealso requester_pays
 #' @return gcs_cloud_auth : No return value
 #'
 #' gcs_get_cloud_auth : An S3 `auth` class containing credentials
@@ -434,7 +435,15 @@ print.auth <- function(x, ...) {
     }
 }
 
-#' @rdname authentication
+#' Requester Pays
+#' 
+#' These functions allow you to set billing project, change the default 
+#' billing target and check if a bucket has Requester Pays enabled. See
+#' the details section in `?authentication` for more information.
+#' 
+#' @param bucket character(1), the bucket name
+#' @inheritParams gcs_cloud_auth
+#' @rdname requester_pays
 #' @export
 gcs_set_billing_project <- function(billing_project = NULL, gcloud = FALSE){
     if(gcloud && is.null(billing_project)){
@@ -446,20 +455,32 @@ gcs_set_billing_project <- function(billing_project = NULL, gcloud = FALSE){
     }
 }
 
-#' @rdname authentication
+
+#' @rdname requester_pays
 #' @export
 gcs_get_billing_project <- function(){
     .billing_project(showError = FALSE)
 }
-#' @rdname authentication
+
+
+#' @rdname requester_pays
 #' @export
 gcs_get_user_pay <- function(){
     .user_pay()
 }
-#' @rdname authentication
+
+
+#' @rdname requester_pays
 #' @export
 gcs_set_user_pay <- function(x){
     .user_pay(x)
+}
+
+
+#' @rdname requester_pays
+#' @export
+is_requester_pay <- function(bucket){
+    .is_requester_pay(bucket)
 }
 
 #' Get/Set read/write connection buffer size
@@ -518,3 +539,5 @@ gcs_get_read_buff <- function() {
 gcs_get_write_buff <- function() {
     package_settings[["output_buff_len"]]
 }
+
+

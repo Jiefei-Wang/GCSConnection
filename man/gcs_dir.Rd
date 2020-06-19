@@ -7,7 +7,7 @@
 gcs_dir(path, delimiter = TRUE, user_pay = gcs_get_user_pay())
 }
 \arguments{
-\item{path}{Character(1), the path to the bucket/folder/file.}
+\item{path}{character(1), the path to the bucket/folder/file.}
 
 \item{delimiter}{Logical(1), whether to use `/` as a path
 delimiter. If not, the path will be treated as the path to a

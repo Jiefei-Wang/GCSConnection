@@ -275,3 +275,16 @@ delete_file <- function(full_path_vector, user_pay) {
     )
     catch_error(r)
 }
+
+.is_requester_pay <- function(bucket){
+    url <- json_url(bucket = bucket, query = list(fields = "billing"))
+    r <- GET(
+        url,
+        add_headers(
+            Authorization = get_token()
+        )
+    )
+    identical(content(r)$error$message,
+              "Bucket is requester pays bucket but no user project provided.")
+    
+}

@@ -4,10 +4,6 @@
 \alias{gcs_cloud_auth}
 \alias{gcs_get_cloud_auth}
 \alias{print.auth}
-\alias{gcs_set_billing_project}
-\alias{gcs_get_billing_project}
-\alias{gcs_get_user_pay}
-\alias{gcs_set_user_pay}
 \title{Google credentials}
 \usage{
 gcs_cloud_auth(json_file, gcloud = FALSE, email = NULL, billing_project = NULL)
@@ -15,14 +11,6 @@ gcs_cloud_auth(json_file, gcloud = FALSE, email = NULL, billing_project = NULL)
 gcs_get_cloud_auth()
 
 \method{print}{auth}(x, ...)
-
-gcs_set_billing_project(billing_project = NULL, gcloud = FALSE)
-
-gcs_get_billing_project()
-
-gcs_get_user_pay()
-
-gcs_set_user_pay(x)
 }
 \arguments{
 \item{json_file}{character(1). A JSON file that can be used to
@@ -33,11 +21,11 @@ the current credential will be erased.}
 Google Cloud Storage.  If the value is `TRUE`, the parameter
 `json_file` will be ignored. See details.}
 
-\item{email}{Character(1) or NULL. For gcloud only. Account to get
+\item{email}{character(1) or NULL. For gcloud only. Account to get
 the access token for.  If not specified, the current active
 account in gcloud will be used.}
 
-\item{billing_project}{Character(1) or NULL. The project's ID which 
+\item{billing_project}{character(1) or NULL. The project's ID which 
 the charges will be sent to. If the value is not NULL, it will 
 overwrite the default setting. See details.}
 
@@ -92,4 +80,7 @@ gcs_cloud_auth()
 ## Show the credentials
 gcs_get_cloud_auth()
 
+}
+\seealso{
+requester_pays
 }

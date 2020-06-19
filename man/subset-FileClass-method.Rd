@@ -12,7 +12,7 @@
 \arguments{
 \item{x}{an object of class `FileClass`}
 
-\item{name, i}{Character(1), the name of the element}
+\item{name, i}{character(1), the name of the element}
 
 \item{exact}{Logical(1), Controls possible partial matching of `[[`
 when extracting by a character(1)}
