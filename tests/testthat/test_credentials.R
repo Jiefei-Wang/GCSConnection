@@ -4,7 +4,7 @@ test_that("credentials access", {
     ## clear out all credentials
     expect_error(gcs_cloud_auth(NULL), NA)
     expect_error(gcs_get_cloud_auth(), NA)
-    
+
     ## The default method
     expect_error(gcs_cloud_auth(), NA)
     expect_error(gcs_get_cloud_auth(), NA)
