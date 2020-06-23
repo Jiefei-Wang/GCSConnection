@@ -159,17 +159,18 @@ gcs_connection <-
 #'
 #' @export
 gcs_cp <- function(from, to, recursive = TRUE, user_pay = gcs_get_user_pay()) {
+    missing_user_pay <- missing(user_pay)
     ## Convert any non-character object to character
     temp <- nonchar_to_char(to, 
                             user_pay = user_pay, 
-                            missing_user_pay = missing(user_pay))
+                            missing_user_pay = missing_user_pay)
     to <- temp$x
     user_pay <- temp$user_pay
     ## If both from and to are File_or_Folder objects,
     ## the setting in from has a higher priority
     temp <- nonchar_to_char(from, 
                             user_pay = user_pay, 
-                            missing_user_pay = missing(user_pay))
+                            missing_user_pay = missing_user_pay)
     from <- temp$x
     user_pay <- temp$user_pay
     
