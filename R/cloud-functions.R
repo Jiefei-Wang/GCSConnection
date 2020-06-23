@@ -49,81 +49,85 @@
 #'
 #' @export
 gcs_connection <-
-    function(description, open = "rb",
-             encoding = getOption("encoding"), bucket = NULL,
+    function(description,
+             open = "rb",
+             encoding = getOption("encoding"),
+             bucket = NULL,
              user_pay = gcs_get_user_pay())
-    {
+{
         ## Convert any non-character object to character
-        temp <- nonchar_to_char(description, 
-                                       user_pay = user_pay, 
-                                       missing_user_pay = missing(user_pay))
-        description <- temp$x
-        user_pay <- temp$user_pay
-        
-        stopifnot(
-            is_scalar_character_or_null(bucket),
-            is_scalar_character(description),
-            is_scalar_character(open),
-            is_scalar_character(encoding)
-        )
-        
-        ## get the file name and bucket name from description
-        if (is_google_uri(description) && !is.null(bucket)) {
-            stop("The argument `bucket` must be NULL when a google URI is provided")
-        }
-        
-        if (is_google_uri(description)) {
-            file_info <- decompose_google_uri(description, is_folder = FALSE)
-            bucket <- file_info$bucket
-            file <- file_info$path_string
-        } else {
-            ## If unable to get the bucket name, use the default setting
-            if (is.null(bucket)) {
-                bucket <- googleCloudStorageR::gcs_get_global_bucket()
-            }
-            file <- description
-        }
-        
-        description <- get_google_uri(bucket, file)
-        
-        token <- get_token()
-        
-        UTF8 <- identical(encoding, "UTF8")
-        is_text <- !grepl("b", open, fixed = TRUE)
-        is_read <- grepl("r", open, fixed = TRUE)
-        is_write <- grepl("w", open, fixed = TRUE)
-        
-        if (is_read && is_write) {
-            stop("connection must be in either read or write mode, but not both.")
-        }
-        
-        if (is_read) {
-            buff_length <- gcs_get_read_buff()
-        } else {
-            buff_length <- gcs_get_write_buff()
-        }
-        
-        ## add the billing project
-        billing_project <- .billing_project(user_pay = user_pay)
-        if(user_pay){
-            description <- paste0(description,"(Billing project enabled)")
-        }
-        
-        auto_open <- TRUE
-        
-        get_bucket_connection(
-            bucket = bucket,
-            file = file,
-            is_read = is_read,
-            is_text = is_text,
-            UTF8 = UTF8,
-            auto_open = auto_open,
-            buff_length = buff_length,
-            description = description,
-            open_mode = open,
-            billing_project = billing_project
+    temp <- nonchar_to_char(description, 
+                            user_pay = user_pay, 
+                            missing_user_pay = missing(user_pay))
+    description <- temp$x
+    user_pay <- temp$user_pay
+    
+    stopifnot(
+        is_scalar_character_or_null(bucket),
+        is_scalar_character(description),
+        is_scalar_character(open),
+        is_scalar_character(encoding)
+    )
+    
+    ## get the file name and bucket name from description
+    if (is_google_uri(description) && !is.null(bucket)) {
+        stop(
+            "argument `bucket` must be NULL when a google URI is provided"
         )
     }
+        
+    if (is_google_uri(description)) {
+        file_info <- decompose_google_uri(description, is_folder = FALSE)
+        bucket <- file_info$bucket
+        file <- file_info$path_string
+    } else {
+        ## If unable to get the bucket name, use the default setting
+        if (is.null(bucket)) {
+            bucket <- googleCloudStorageR::gcs_get_global_bucket()
+        }
+        file <- description
+    }
+    
+    description <- get_google_uri(bucket, file)
+    
+    token <- get_token()
+        
+    UTF8 <- identical(encoding, "UTF8")
+    is_text <- !grepl("b", open, fixed = TRUE)
+    is_read <- grepl("r", open, fixed = TRUE)
+    is_write <- grepl("w", open, fixed = TRUE)
+    
+    if (is_read && is_write) {
+        stop("connection must be in either read or write mode, but not both.")
+    }
+    
+    if (is_read) {
+        buff_length <- gcs_get_read_buff()
+    } else {
+        buff_length <- gcs_get_write_buff()
+    }
+        
+    ## add the billing project
+    billing_project <- .billing_project(user_pay = user_pay)
+    if(user_pay){
+        description <- paste0(description,"(Billing project enabled)")
+    }
+    
+    auto_open <- TRUE
+    
+    get_bucket_connection(
+        bucket = bucket,
+        file = file,
+        is_read = is_read,
+        is_text = is_text,
+        UTF8 = UTF8,
+        auto_open = auto_open,
+        buff_length = buff_length,
+        description = description,
+        open_mode = open,
+        billing_project = billing_project
+    )
+}
 
 
 #' copy files to and from buckets

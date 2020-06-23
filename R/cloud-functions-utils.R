@@ -1,8 +1,9 @@
 ## two cases:
 ## 1. on-disk folder -> cloud
 ## 2. cloud folder -> disk/cloud
-gcs_cp_folder <- function(from, to, from_cloud, to_cloud,
-                          recursive, user_pay){
+gcs_cp_folder <-
+    function(from, to, from_cloud, to_cloud, recursive, user_pay)
+{
     if (!from_cloud) {
         ## If the source is on a disk
         ## get the files in the folder
@@ -86,8 +87,9 @@ gcs_cp_folder <- function(from, to, from_cloud, to_cloud,
 ## 1. on-disk file -> cloud
 ## 2. cloud file -> disk
 ## 3. cloud file -> cloud
-gcs_cp_file <- function(from, to, from_cloud, to_cloud,
-                               user_pay){
+gcs_cp_file <-
+    function(from, to, from_cloud, to_cloud, user_pay)
+{
     if (from_cloud) {
         info <- decompose_google_uri(from)
         from <- info$full_path_vector
