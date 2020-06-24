@@ -1,3 +1,5 @@
+setClassUnion("Char_or_NULL", c("character","NULL"))
+
 #' Folder class
 #'
 #' View and access files. You can change the current directory by `$`
@@ -14,7 +16,7 @@
         file_sizes = "character",
         depth = "numeric",
         cache = "environment",
-        user_pay = "logical"
+        billing_project = "Char_or_NULL"
     )
 )
 
@@ -36,7 +38,7 @@
         file_type = "character",
         uri = "character",
         lastModified = "character",
-        user_pay = "logical"
+        billing_project = "Char_or_NULL"
     )
 )
 

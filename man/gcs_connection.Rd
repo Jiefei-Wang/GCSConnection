@@ -9,7 +9,7 @@ gcs_connection(
   open = "rb",
   encoding = getOption("encoding"),
   bucket = NULL,
-  user_pay = gcs_get_user_pay()
+  billing_project = gcs_get_user_pay()
 )
 }
 \arguments{
@@ -32,10 +32,11 @@ located in. If not supplied, value in `gcs_get_global_bucket()`
 will be used. If a full path to the file is provided in
 `description`, this parameter will be ignored.}
 
-\item{user_pay}{logical(1). Whether users should be responsible
-for the cost associated with accessing the data. If the value
-is `TRUE`, the charge will be sent to the billing project. See
-`?gcs_get_billing_project()` for more details.}
+\item{billing_project}{logical(1) or character(1). If logical, whether users 
+should pay the cost for accessing the data. The 
+billing project is the project ID in `gcs_get_billing_project()`.
+If character, it represents the project ID that will be charged
+by Google.}
 }
 \value{
 A connection

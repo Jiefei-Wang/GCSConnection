@@ -1,7 +1,7 @@
 context("Test gcs_cp")
 
 ## clear credentials
-gcs_cloud_auth()
+gcs_cloud_auth(json_file = NULL)
 
 URI <- "gs://genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
 

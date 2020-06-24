@@ -1,12 +1,13 @@
 ## full_path_vector is a vector of folder and file names
-.makeFileClass <- function(full_path_vector, user_pay = FALSE) {
+.makeFileClass <- function(full_path_vector, billing_project = NULL) {
     x <- .FileClass()
     .full_path_vector(x) <- full_path_vector
-    .class_user_pay(x) <- user_pay
+    .class_billing_project(x) <- billing_project
     
     .bucket_name(x) <- full_path_vector[1]
     .file_name(x) <- paste0(full_path_vector[-1], collapse = .delimiter())
-    file_info <- get_file_meta(full_path_vector, noError = FALSE, user_pay = user_pay)
+    file_info <- get_file_meta(full_path_vector, noError = FALSE, 
+                               billing_project = billing_project)
     .file_size(x) <- file_info$`size`
     .file_type(x) <- file_info$`contentType`
     .lastModified(x) <- file_info$`updated`
@@ -29,7 +30,7 @@ setMethod("show", signature("FileClass"), function(object) {
     cat("Type:  ", .file_type(object), "\n")
     cat("URI:   ", .uri(object), "\n")
     cat("Last modified:", .lastModified(object), "\n")
-    cat("user pay:", .class_user_pay(object), "\n")
+    cat("Billing project:", .class_billing_project(object), "\n")
     invisible(object)
 })
 
@@ -58,7 +59,11 @@ setMethod("[[", signature("FileClass"), function(x, i, exact = TRUE) {
             grepl(.delimiter(),i,fixed = TRUE)) {
             full_path_vector <- get_absolute_path(.full_path_vector(x), i)
             path <- paste0(full_path_vector,collapse = .delimiter())
-            return(gcs_dir(path, delimiter = TRUE, user_pay = .class_user_pay(x)))
+            return(
+              gcs_dir(path, 
+                      delimiter = TRUE, 
+                      billing_project = .class_billing_project(x))
+              )
         }
     }
     name <- names(x)[match_name(names(x), i, exact)]
@@ -66,13 +71,13 @@ setMethod("[[", signature("FileClass"), function(x, i, exact = TRUE) {
         return(NULL)
     }
     if (name == "copy_to") {
-        func1 <- function(destination, user_pay = .class_user_pay(x)) {
-            gcs_cp(.uri(x), destination, user_pay = user_pay)
+        func1 <- function(destination, billing_project = .class_billing_project(x)) {
+            gcs_cp(.uri(x), destination, billing_project = billing_project)
         }
         return(func1)
     }
     if (name == "delete") {
-        func2 <- function(quiet = FALSE, user_pay = .class_user_pay(x)) {
+        func2 <- function(quiet = FALSE, billing_project = .class_billing_project(x)) {
             if (!quiet) {
                 message("Are you sure you want to delete this file? [y/n]:")
                 answer <- readline()
@@ -80,16 +85,16 @@ setMethod("[[", signature("FileClass"), function(x, i, exact = TRUE) {
                     return()
                 }
             }
-            delete_file(.full_path_vector(x), user_pay = user_pay)
+            delete_file(.full_path_vector(x), billing_project = billing_project)
         }
         return(func2)
     }
     if (name == "get_connection") {
         func3 <- function(open = "rb", encoding = getOption("encoding"),
-                          user_pay = .class_user_pay(x)) {
+                          billing_project = .class_billing_project(x)) {
             gcs_connection(
                 description = .uri(x), open = open,
-                encoding = encoding, user_pay = user_pay
+                encoding = encoding, billing_project = billing_project
             )
         }
         return(func3)
@@ -99,8 +104,8 @@ setMethod("[[", signature("FileClass"), function(x, i, exact = TRUE) {
         full_path_vector <- .full_path_vector(x)
         return(full_path_vector[length(full_path_vector)])
     }
-    if (name == "user_pay") {
-        return(.class_user_pay(x))
+    if (name == "billing_project") {
+        return(.class_billing_project(x))
     }
     func <- get(paste0(".", name))
     func(x)
@@ -113,7 +118,7 @@ setMethod("names", signature("FileClass"),
           function(x)
           {
               c("full_path_vector", "bucket_name", "file_name",
-                "file_size", "file_type", "URI", "lastModified","user_pay",
+                "file_size", "file_type", "URI", "lastModified","billing_project",
                 "copy_to", "delete", "get_connection")
           })
 

@@ -135,7 +135,7 @@ decompose_google_uri <- function(x, is_folder = NULL) {
 ## URL used by gcs_cp
 ## it will check the existance of the file/folder
 ## and add a trailing slash if it is a folder.
-standardize_file_path <- function(x, user_pay = FALSE) {
+standardize_file_path <- function(x, billing_project = NULL) {
     is_cloud_path <- is_google_uri(x)
     if (!is_cloud_path) {
         x_std <- normalizePath(x, winslash = .delimiter(), mustWork = FALSE)
@@ -153,7 +153,7 @@ standardize_file_path <- function(x, user_pay = FALSE) {
             stop("Illegal path: ", x)
         }
         x_std <- info$uri
-        if (!endsWith(x_std, "/") && exist_folder(info$full_path_vector,user_pay)) {
+        if (!endsWith(x_std, "/") && exist_folder(info$full_path_vector,billing_project)) {
             x_std <- paste0(x_std, "/")
         }
     }

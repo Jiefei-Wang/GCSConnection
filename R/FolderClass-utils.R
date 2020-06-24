@@ -22,7 +22,7 @@
 
 .is_files <- function(x) !.is_folders(x)
 
-.class_user_pay <- function(x) x@user_pay
+.class_billing_project <- function(x) x@billing_project
 
 
 `.full_path_vector<-` <- function(x, value) {
@@ -61,8 +61,8 @@
     x@cache <- value
     x
 }
-`.class_user_pay<-` <- function(x, value) {
-    x@user_pay <- value
+`.class_billing_project<-` <- function(x, value) {
+    x@billing_project <- value
     x
 }
 
@@ -91,7 +91,7 @@ refresh_list <- function(x) {
     full_path_vector <- .full_path_vector(x)
     bucket_name <- full_path_vector[1]
     
-    query_result <- list_files(full_path_vector, user_pay = .class_user_pay(x))
+    query_result <- list_files(full_path_vector, billing_project = .class_billing_project(x))
     .file_types(x) <- c(
         rep("file", length(query_result$file_names)),
         rep("folder", length(query_result$folder_names))

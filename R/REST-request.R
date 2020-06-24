@@ -1,4 +1,5 @@
-json_url <- function(bucket, file = NULL, query = NULL,  upload = FALSE, user_pay = FALSE) {
+json_url <- function(bucket, file = NULL, query = NULL,  upload = FALSE, 
+                     billing_project = NULL) {
     if (!is.null(file)&&length(file)!=0) {
         file <- get_combined_path(
             file,
@@ -6,7 +7,7 @@ json_url <- function(bucket, file = NULL, query = NULL,  upload = FALSE, user_pa
         )
     }
     .json_url(b = bucket, o=file, query = query, 
-              upload = upload, user_pay = user_pay)
+              upload = upload, billing_project = billing_project)
 }
 
 
@@ -119,7 +120,8 @@ get_file_size <- function(url, billing_project) {
 ## For gcs_cp and gcs_dir
 ##################################################
 
-copy_data_on_cloud <- function(from_full_path_vector, to_full_path_vector, user_pay = FALSE) {
+copy_data_on_cloud <- function(from_full_path_vector, to_full_path_vector, 
+                               billing_project = NULL) {
     from_bucket <- from_full_path_vector[1]
     from_file <- get_combined_path(
         from_full_path_vector[-1],
@@ -131,7 +133,8 @@ copy_data_on_cloud <- function(from_full_path_vector, to_full_path_vector, user_
         is_folder = FALSE
     )
     
-    url <- .json_url(b=from_bucket,o=from_file,copyTo="",b=to_bucket,o=to_file,user_pay = user_pay)
+    url <- .json_url(b=from_bucket,o=from_file,copyTo="",
+                     b=to_bucket,o=to_file,billing_project = billing_project)
     r <- POST(
         url,
         add_headers(
@@ -141,11 +144,11 @@ copy_data_on_cloud <- function(from_full_path_vector, to_full_path_vector, user_
     catch_error(r)
 }
 
-download_data_to_disk <- function(full_path_vector, disk_path, user_pay = FALSE) {
+download_data_to_disk <- function(full_path_vector, disk_path, billing_project = NULL) {
     bucket <- full_path_vector[1]
     file <- full_path_vector[-1]
     url <- json_url(bucket = bucket, file = file, 
-                    query = list(alt = "media"), user_pay = user_pay)
+                    query = list(alt = "media"), billing_project = billing_project)
     r <- GET(
         url,
         add_headers(
@@ -157,11 +160,11 @@ download_data_to_disk <- function(full_path_vector, disk_path, user_pay = FALSE)
 }
 
 
-upload_data_from_disk <- function(disk_path, full_path_vector, user_pay = FALSE) {
+upload_data_from_disk <- function(disk_path, full_path_vector, billing_project = NULL) {
     bucket <- full_path_vector[1]
     file <- full_path_vector[-1]
     url <- json_upload_url(bucket, file, resumable = FALSE, 
-                           billing_project = .billing_project(user_pay = user_pay))
+                           billing_project = billing_project)
     r <- POST(
         url,
         add_headers(
@@ -178,7 +181,7 @@ upload_data_from_disk <- function(disk_path, full_path_vector, user_pay = FALSE)
 ## full_path_vector: either a path to a folder/file or an empty string
 list_files <-
     function(full_path_vector, delimiter = .delimiter(), 
-             next_page_token = NULL, user_pay = FALSE)
+             next_page_token = NULL, billing_project = NULL)
     {
         bucket <- full_path_vector[1]
         path_string <- get_combined_path(full_path_vector[-1], is_folder = TRUE)
@@ -194,7 +197,7 @@ list_files <-
             prefix = path_string_encoded,
             pageToken = next_page_token
         ),
-        user_pay = user_pay
+        billing_project = billing_project
         )
         r <- GET(
             url,
@@ -227,13 +230,13 @@ list_files <-
     }
 
 
-get_file_meta <- function(full_path_vector, noError = FALSE, user_pay = FALSE) {
+get_file_meta <- function(full_path_vector, noError = FALSE, billing_project = NULL) {
     bucket <- full_path_vector[1]
     file <- full_path_vector[-1]
     if(length(file)==0)
         file = ""
     url <- json_url(bucket = bucket, file = file, 
-                    query = list(alt = "json"), user_pay = user_pay)
+                    query = list(alt = "json"), billing_project = billing_project)
     r <- GET(
         url,
         add_headers(
@@ -248,24 +251,24 @@ get_file_meta <- function(full_path_vector, noError = FALSE, user_pay = FALSE) {
 }
 
 
-exist_file <- function(full_path_vector, user_pay = FALSE) {
+exist_file <- function(full_path_vector, billing_project = NULL) {
     !is.null(get_file_meta(full_path_vector, noError = TRUE,
-                           user_pay = user_pay))
+                           billing_project = billing_project))
 }
 
 
-exist_folder <- function(full_path_vector, user_pay) {
+exist_folder <- function(full_path_vector, billing_project = NULL) {
     if(length(full_path_vector)<=1)
         return(TRUE)
-    res <- list_files(full_path_vector, user_pay = user_pay)
+    res <- list_files(full_path_vector, billing_project = billing_project)
     length(res$file_names) != 0 || length(res$folder_names) != 0
 }
 
 
-delete_file <- function(full_path_vector, user_pay) {
+delete_file <- function(full_path_vector, billing_project = NULL) {
     bucket <- full_path_vector[1]
     file <- full_path_vector[-1]
-    url <- json_url(bucket = bucket, file = file, user_pay = user_pay)
+    url <- json_url(bucket = bucket, file = file, billing_project = billing_project)
     auth <- get_token()
     r <- DELETE(
         url,
@@ -284,7 +287,15 @@ delete_file <- function(full_path_vector, user_pay) {
             Authorization = get_token()
         )
     )
-    identical(content(r)$error$message,
-              "Bucket is requester pays bucket but no user project provided.")
-    
+    ## The status code must be either 400 or 200
+    ## Otherwise, some error happened.
+    if(status_code(r) == 400)
+    if(identical(content(r)$error$message,
+                  "Bucket is requester pays bucket but no user project provided.")){
+        return(TRUE)
+    }
+    if(status_code(r) == 200){
+        return(FALSE)
+    }
+    catch_error(r)
 }

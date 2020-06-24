@@ -31,8 +31,16 @@ Google Cloud Storage.  If the value is `TRUE`, the parameter
 
 \item{bucket}{character(1), the bucket name}
 }
+\value{
+gcs_get_billing_project: character(1) or NULL
+gcs_get_user_pay: logical(1)
+}
 \description{
 These functions allow you to set billing project, change the default 
 billing target and check if a bucket has Requester Pays enabled. See
 the details section in `?authentication` for more information.
+}
+\examples{
+gcs_get_billing_project()
+gcs_get_user_pay()
 }

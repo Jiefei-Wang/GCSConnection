@@ -2,7 +2,7 @@
 ## 1. on-disk folder -> cloud
 ## 2. cloud folder -> disk/cloud
 gcs_cp_folder <-
-    function(from, to, from_cloud, to_cloud, recursive, user_pay)
+    function(from, to, from_cloud, to_cloud, recursive, billing_project)
 {
     if (!from_cloud) {
         ## If the source is on a disk
@@ -20,7 +20,7 @@ gcs_cp_folder <-
         
         results <- list_files(
             info$full_path_vector, delimiter = delimiter,
-            user_pay = user_pay
+            billing_project = billing_project
         )
         
         all_file_names <- results$file_names
@@ -42,7 +42,7 @@ gcs_cp_folder <-
                         info$full_path_vector,
                         delimiter = delimiter,
                         next_page_token = token,
-                        user_pay = user_pay
+                        billing_project = billing_project
                     )
                     
                     all_file_names <- c(
@@ -75,7 +75,7 @@ gcs_cp_folder <-
             gcs_cp_file(
                 from = from_files[i], to = to_files[i],
                 from_cloud = from_cloud, to_cloud = to_cloud,
-                user_pay = user_pay
+                billing_project = billing_project
             )
         })
     }
@@ -88,7 +88,7 @@ gcs_cp_folder <-
 ## 2. cloud file -> disk
 ## 3. cloud file -> cloud
 gcs_cp_file <-
-    function(from, to, from_cloud, to_cloud, user_pay)
+    function(from, to, from_cloud, to_cloud, billing_project)
 {
     if (from_cloud) {
         info <- decompose_google_uri(from)
@@ -104,26 +104,36 @@ gcs_cp_file <-
     }
     
     if (from_cloud && to_cloud) {
-        copy_data_on_cloud(from, to, user_pay = user_pay)
+        copy_data_on_cloud(from, to, billing_project = billing_project)
     }else if (from_cloud) {
-        download_data_to_disk(from, to, user_pay = user_pay)
+        download_data_to_disk(from, to, billing_project = billing_project)
     }else if (to_cloud) {
-        upload_data_from_disk(from, to, user_pay = user_pay)
+        upload_data_from_disk(from, to, billing_project = billing_project)
     }
 }
 
 ## Convert any non-character object to character
 ## if the object is a FileClass or FolderClass
-## Extract its user_pay setting and return the result
+## Extract its billing_project setting and return the result
 ## if users did not provide a value.
-nonchar_to_char <- function(x, user_pay, missing_user_pay){
+nonchar_to_char <- function(x, billing_project, missing_billing_project){
     if(!is.null(x) && !is.character(x)){
         if(is(x, "File_or_Folder")){
-            if(missing_user_pay){
-                user_pay <- .class_user_pay(x)
+            if(missing_billing_project){
+                billing_project <- .class_billing_project(x)
             }
             x <- as.character(x)
         }
     }
-    list(x = x, user_pay = user_pay)
+    list(x = x, billing_project = billing_project)
+}
+
+
+get_billing_project <- function(x){
+    if(is.logical(x)){
+        billing_project <- .billing_project(user_pay = x)
+    }else{
+        billing_project <- x
+    }
+    billing_project
 }

@@ -4,7 +4,7 @@
 \alias{gcs_dir}
 \title{List bucket/folder/object}
 \usage{
-gcs_dir(path, delimiter = TRUE, user_pay = gcs_get_user_pay())
+gcs_dir(path, delimiter = TRUE, billing_project = gcs_get_user_pay())
 }
 \arguments{
 \item{path}{character(1), the path to the bucket/folder/file.}
@@ -13,10 +13,11 @@ gcs_dir(path, delimiter = TRUE, user_pay = gcs_get_user_pay())
 delimiter. If not, the path will be treated as the path to a
 file even when it ends with `/`}
 
-\item{user_pay}{logical(1). Whether users should be responsible
-for the cost associated with accessing the data. If the value
-is `TRUE`, the charge will be sent to the billing project. See
-`?gcs_get_billing_project()` for more details.}
+\item{billing_project}{logical(1) or character(1). If logical, whether users 
+should pay the cost for accessing the data. The 
+billing project is the project ID in `gcs_get_billing_project()`.
+If character, it represents the project ID that will be charged
+by Google.}
 }
 \value{
 `FolderClass` object or a `FileClass` object

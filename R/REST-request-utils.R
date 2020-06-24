@@ -1,8 +1,7 @@
-get_headers <- function(...,user_pay){
-    user_project <- .billing_project(user_pay = user_pay)
+get_headers <- function(...,billing_project){
     add_headers(
         Authorization = get_token(),
-        userProject = user_project,
+        userProject = billing_project,
         ...
     )
 }
@@ -13,15 +12,15 @@ catch_error <- function(r) {
         stop(
             "An error has occured when sending a REST request(Error code: ",
             status_code(r), "). \n",
-            "A possible reason is that you do not have the access rights, ",
-            "please set your credentials via 'gcs_cloud_auth()'.\n"
+            "Either you do not have the access rights, ",
+            "or you have sent an invalid billing project\n"
         )
     }
     if(status_code(r) == 400){
         stop(
             "An error has occured when sending a REST request(Error code: ",
             status_code(r), "). \n",
-            "A possible reason is that the file you are trying to access ",
+            "A possible reason is that the bucket you are trying to access ",
             "requires a billing project but your did not enable this feature ",
             "in the function call."
         )
@@ -81,11 +80,12 @@ catch_error <- function(r) {
 ## https://storage.googleapis.com/upload/storage/v1/b/myBucket/o?uploadType=resumable
 ## .json_url(b="mybucket", o=NULL, query=list(uploadType="resumable"), upload=TRUE)
 ## [1] "https://storage.googleapis.com/upload/storage/b/mybucket/o?uploadType=resumable"
-.json_url <- function(..., query = NULL, version = "v1", upload = FALSE, user_pay = FALSE){
-    if(user_pay){
+.json_url <- function(..., query = NULL, version = "v1", upload = FALSE, 
+                      billing_project = NULL){
+    if(!is.null(billing_project)){
         if(is.null(query))
             query <- list()
-        query[["userProject"]] <- .billing_project(user_pay = user_pay)
+        query[["userProject"]] <- billing_project
     }
     base <- "https://storage.googleapis.com"
     if(upload)

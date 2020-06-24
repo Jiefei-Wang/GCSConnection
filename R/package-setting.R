@@ -30,7 +30,7 @@ package_settings[["delimiter"]] <- "/"
     if(missing(x))
         package_settings[["user_pay"]]
     else
-        package_settings[["user_pay"]] <- x
+        package_settings[["user_pay"]] <- as.logical(x)
 }
 
 ## user_pay: Wether to return a billing project.
@@ -50,21 +50,21 @@ package_settings[["delimiter"]] <- "/"
             NULL
     }
     else
-        package_settings[["billing_project"]] <- x
+        package_settings[["billing_project"]] <- as.character(x)
 }
 
 .gcloud_account <- function(x){
     if(missing(x))
         package_settings[["gcloud_account"]]
     else
-        package_settings[["gcloud_account"]] <- x
+        package_settings[["gcloud_account"]] <- as.character(x)
 }
 
 .is_gcloud <- function(x){
     if(missing(x))
         package_settings[["is_gcloud"]]
     else
-        package_settings[["is_gcloud"]] <- x
+        package_settings[["is_gcloud"]] <- as.logical(x)
 }
 
 .gcloud_token_time <- function(x){
@@ -92,7 +92,7 @@ package_settings[["delimiter"]] <- "/"
     if(missing(x))
         package_settings[["delimiter"]]
     else
-        package_settings[["delimiter"]] <- x
+        package_settings[["delimiter"]] <- as.character(x)
 }
 
 

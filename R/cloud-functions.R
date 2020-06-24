@@ -21,10 +21,11 @@
 #'     located in. If not supplied, value in `gcs_get_global_bucket()`
 #'     will be used. If a full path to the file is provided in
 #'     `description`, this parameter will be ignored.
-#' @param user_pay logical(1). Whether users should be responsible
-#'     for the cost associated with accessing the data. If the value
-#'     is `TRUE`, the charge will be sent to the billing project. See
-#'     `?gcs_get_billing_project()` for more details.
+#' @param billing_project logical(1) or character(1). If logical, whether users 
+#'     should pay the cost for accessing the data. The 
+#'     billing project is the project ID in `gcs_get_billing_project()`.
+#'     If character, it represents the project ID that will be charged
+#'     by Google.
 #'
 #' @details Possible values for the argument `open` are the
 #'     combination of the following characters:
@@ -53,14 +54,14 @@ gcs_connection <-
              open = "rb",
              encoding = getOption("encoding"),
              bucket = NULL,
-             user_pay = gcs_get_user_pay())
+             billing_project = gcs_get_user_pay())
 {
-        ## Convert any non-character object to character
-    temp <- nonchar_to_char(description, 
-                            user_pay = user_pay, 
-                            missing_user_pay = missing(user_pay))
+    # Convert any non-character object to character
+    temp <- nonchar_to_char(description,
+                            billing_project = billing_project,
+                            missing_billing_project = missing(billing_project))
     description <- temp$x
-    user_pay <- temp$user_pay
+    billing_project <- temp$billing_project
     
     stopifnot(
         is_scalar_character_or_null(bucket),
@@ -106,10 +107,10 @@ gcs_connection <-
     } else {
         buff_length <- gcs_get_write_buff()
     }
-        
+    
     ## add the billing project
-    billing_project <- .billing_project(user_pay = user_pay)
-    if(user_pay){
+    billing_project <- get_billing_project(billing_project)
+    if(is.character(billing_project)){
         description <- paste0(description,"(Billing project enabled)")
     }
     
@@ -162,21 +163,24 @@ gcs_connection <-
 #' list.files(folder_path)
 #'
 #' @export
-gcs_cp <- function(from, to, recursive = TRUE, user_pay = gcs_get_user_pay()) {
-    missing_user_pay <- missing(user_pay)
+gcs_cp <- function(from, to, recursive = TRUE, billing_project = gcs_get_user_pay()) {
+    missing_billing_project <- missing(billing_project)
     ## Convert any non-character object to character
     temp <- nonchar_to_char(to, 
-                            user_pay = user_pay, 
-                            missing_user_pay = missing_user_pay)
+                            billing_project = billing_project, 
+                            missing_billing_project = missing_billing_project)
     to <- temp$x
-    user_pay <- temp$user_pay
+    billing_project <- temp$billing_project
     ## If both from and to are File_or_Folder objects,
     ## the setting in from has a higher priority
     temp <- nonchar_to_char(from, 
-                            user_pay = user_pay, 
-                            missing_user_pay = missing_user_pay)
+                            billing_project = billing_project, 
+                            missing_billing_project = missing_billing_project)
     from <- temp$x
-    user_pay <- temp$user_pay
+    billing_project <- temp$billing_project
+    
+    ## Convert logical value to billing project ID
+    billing_project <- get_billing_project(billing_project)
     
     
     from_cloud <- is_google_uri(from)
@@ -187,8 +191,8 @@ gcs_cp <- function(from, to, recursive = TRUE, user_pay = gcs_get_user_pay()) {
             "it cannot manage your disk file."
         )
     }
-    from <- standardize_file_path(from, user_pay = user_pay)
-    to <- standardize_file_path(to, user_pay = user_pay)
+    from <- standardize_file_path(from, billing_project = billing_project)
+    to <- standardize_file_path(to, billing_project = billing_project)
     
     ## The path has been standardized
     from_folder <- is_folder_path(from)
@@ -206,11 +210,11 @@ gcs_cp <- function(from, to, recursive = TRUE, user_pay = gcs_get_user_pay()) {
     if (from_folder) {
         gcs_cp_folder(from = from, to = to,
                       from_cloud = from_cloud, to_cloud = to_cloud,
-                      recursive = recursive, user_pay = user_pay)
+                      recursive = recursive, billing_project = billing_project)
     } else {
         gcs_cp_file(from = from, to = to,
                     from_cloud = from_cloud, to_cloud = to_cloud, 
-                    user_pay = user_pay)
+                    billing_project = billing_project)
     }
     return(invisible())
 }
@@ -246,13 +250,16 @@ gcs_cp <- function(from, to, recursive = TRUE, user_pay = gcs_get_user_pay()) {
 #' `FolderClass` object or a `FileClass` object
 #'
 #' @export
-gcs_dir <- function(path, delimiter = TRUE, user_pay = gcs_get_user_pay()) {
+gcs_dir <- function(path, delimiter = TRUE, billing_project = gcs_get_user_pay()) {
     ## Convert any non-character object to character
     temp <- nonchar_to_char(path, 
-                            user_pay = user_pay, 
-                            missing_user_pay = missing(user_pay))
+                            billing_project = billing_project, 
+                            missing_billing_project = missing(billing_project))
     path <- temp$x
-    user_pay <- temp$user_pay
+    billing_project <- temp$billing_project
+    
+    ## Convert logical value to billing project ID
+    billing_project <- get_billing_project(billing_project)
     ## If path is empty
     if(is.null(path)||
        length(path) == 0){
@@ -262,7 +269,7 @@ gcs_dir <- function(path, delimiter = TRUE, user_pay = gcs_get_user_pay()) {
     ## If delimiter is not used, the path must be a file path
     ## Otherwise, we send a request to the cloud to
     ## Determine whether the path is a file path or a folder path
-    if(delimiter && exist_folder(info$full_path_vector, user_pay)){
+    if(delimiter && exist_folder(info$full_path_vector, billing_project)){
         is_folder <- TRUE
     }else{
         is_folder <- FALSE
@@ -272,11 +279,12 @@ gcs_dir <- function(path, delimiter = TRUE, user_pay = gcs_get_user_pay()) {
     
     
     if (!is_folder) {
-        .makeFileClass(full_path_vector = info$full_path_vector, user_pay = user_pay)
+        .makeFileClass(full_path_vector = info$full_path_vector, 
+                       billing_project = billing_project)
     } else {
         .makeFolderClass(
             full_path_vector = info$full_path_vector,
-            user_pay = user_pay
+            billing_project = billing_project
         )
     }
 }
@@ -449,6 +457,12 @@ print.auth <- function(x, ...) {
 #' @param bucket character(1), the bucket name
 #' @inheritParams gcs_cloud_auth
 #' @rdname requester_pays
+#' @examples 
+#' gcs_get_billing_project()
+#' gcs_get_user_pay()
+#' @return 
+#' gcs_get_billing_project: character(1) or NULL
+#' gcs_get_user_pay: logical(1)
 #' @export
 gcs_set_billing_project <- function(billing_project = NULL, gcloud = FALSE){
     if(gcloud && is.null(billing_project)){

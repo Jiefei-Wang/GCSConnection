@@ -4,7 +4,7 @@
 \alias{gcs_cp}
 \title{copy files to and from buckets}
 \usage{
-gcs_cp(from, to, recursive = TRUE, user_pay = gcs_get_user_pay())
+gcs_cp(from, to, recursive = TRUE, billing_project = gcs_get_user_pay())
 }
 \arguments{
 \item{from, to}{character(1). The path to the folder/file.  At least
@@ -14,10 +14,11 @@ add a trailing "/" if the parameter is a path to a folder.}
 \item{recursive}{logical(1). Whether to recursively copy the files in
 the subfolders.}
 
-\item{user_pay}{logical(1). Whether users should be responsible
-for the cost associated with accessing the data. If the value
-is `TRUE`, the charge will be sent to the billing project. See
-`?gcs_get_billing_project()` for more details.}
+\item{billing_project}{logical(1) or character(1). If logical, whether users 
+should pay the cost for accessing the data. The 
+billing project is the project ID in `gcs_get_billing_project()`.
+If character, it represents the project ID that will be charged
+by Google.}
 }
 \value{
 No return value

@@ -1,7 +1,7 @@
 ## full_path_vector: The first element is the bucket name,
 ## the rest is a vector of folder names
 .makeFolderClass <-
-    function(full_path_vector, depth = 1L, user_pay = FALSE)
+    function(full_path_vector, depth = 1L, billing_project = NULL)
     {
         if (length(full_path_vector) == 0) {
             full_path_vector <- character(0)
@@ -9,7 +9,7 @@
         x <- .FolderClass()
         .full_path_vector(x) <- full_path_vector
         .depth(x) <- depth
-        .class_user_pay(x) <- user_pay
+        .class_billing_project(x) <- billing_project
         if (length(.full_path_vector(x)) != 0) {
             x <- refresh_list(x)
         }
@@ -98,8 +98,11 @@ setMethod("[[", signature("FolderClass"), function(x, i, exact = TRUE) {
         if(len_diff == 0 && is_subpath){
             return(x)
         }else if(len_diff != 1 || !is_subpath){
-            return(gcs_dir(paste(full_path_vector, collapse = .delimiter()),
-                           delimiter = TRUE, user_pay = .class_user_pay(x)))
+            return(
+              gcs_dir(paste(full_path_vector, collapse = .delimiter()),
+                      delimiter = TRUE, 
+                      billing_project = .class_billing_project(x))
+              )
         }else{
             ## if it is just a single file/folder names
             i <- full_path_vector[length(full_path_vector)]
@@ -125,12 +128,12 @@ setMethod("[[", signature("FolderClass"), function(x, i, exact = TRUE) {
         result <- .makeFolderClass(
             full_path_vector = path,
             depth = .depth(x) - 1,
-            user_pay = .class_user_pay(x)
+            billing_project = .class_billing_project(x)
         )
     } else {
         path <- c(.full_path_vector(x), name_without_slash)
         result <- .makeFileClass(full_path_vector = path, 
-                                 user_pay = .class_user_pay(x))
+                                 billing_project = .class_billing_project(x))
     }
     .cache(x)[[name_with_slash]] <- result
     result
