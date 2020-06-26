@@ -4,7 +4,7 @@
 \alias{gcs_dir}
 \title{List bucket/folder/object}
 \usage{
-gcs_dir(path, delimiter = TRUE, billing_project = gcs_get_user_pay())
+gcs_dir(path, delimiter = TRUE, billing_project = gcs_get_requester_pays())
 }
 \arguments{
 \item{path}{character(1), the path to the bucket/folder/file.}

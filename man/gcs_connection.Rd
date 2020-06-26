@@ -9,14 +9,16 @@ gcs_connection(
   open = "rb",
   encoding = getOption("encoding"),
   bucket = NULL,
-  billing_project = gcs_get_user_pay()
+  billing_project = gcs_get_requester_pays()
 )
 }
 \arguments{
-\item{description}{character(1). The Google Cloud URL to the file 
-that you want to connect to. If the value is a file path
-(e.g. "folder1/folder2/myfile"), the bucket name will be provided
-separately in the paramter `bucket`.}
+\item{description}{character(1). a google uri to the file 
+that you want to connect to. If the value is a path
+(e.g. "folder1/folder2/myfile") and the argument `bucket` is
+missing, it will be treated as a google uri without the common 
+header `gs://`. If the argument `bucket` is not missing,
+the value in `description` will be treated as a relative path.}
 
 \item{open}{character(1). A description of how to open the
 connection.  See details for possible values. the default 
@@ -28,8 +30,7 @@ should be either `native.enc` or `UTF8`. see `?connections` for
 more detail.}
 
 \item{bucket}{character(1). The name of the bucket that the file is
-located in. If not supplied, value in `gcs_get_global_bucket()`
-will be used. If a full path to the file is provided in
+located in. If a google uri to the file is provided in
 `description`, this parameter will be ignored.}
 
 \item{billing_project}{logical(1) or character(1). If logical, whether users 

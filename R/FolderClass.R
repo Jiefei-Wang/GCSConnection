@@ -152,11 +152,11 @@ setMethod("names", signature("FolderClass"), function(x) {
 setAs("FolderClass", "character", 
       function(from)
       {
-          url <- get_google_uri(full_path_vector = .full_path_vector(from))
-          if(!endsWith(url,.delimiter())){
-              url <- paste0(url,.delimiter())
+          uri <- get_google_uri(full_path_vector = .full_path_vector(from))
+          if(!endsWith(uri,.delimiter())){
+            uri <- paste0(uri,.delimiter())
           }
-          url
+          uri
       }
 )
 

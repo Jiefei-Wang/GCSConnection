@@ -6,10 +6,13 @@
 #' the bucket requires Requester Pays, a billing project needs to be
 #' set in `gcs_set_billing_project`.
 #'
-#' @param description character(1). The Google Cloud URL to the file 
-#'     that you want to connect to. If the value is a file path
-#'     (e.g. "folder1/folder2/myfile"), the bucket name will be provided
-#'     separately in the paramter `bucket`.
+#' @param description character(1). a google uri to the file 
+#'     that you want to connect to. If the value is a path
+#'     (e.g. "folder1/folder2/myfile") and the argument `bucket` is
+#'     missing, it will be treated as a google uri without the common 
+#'     header `gs://`. If the argument `bucket` is not missing,
+#'     the value in `description` will be treated as a relative path.
+#'     
 #' @param open character(1). A description of how to open the
 #'     connection.  See details for possible values. the default 
 #'     is "rb".
@@ -18,8 +21,7 @@
 #'     should be either `native.enc` or `UTF8`. see `?connections` for
 #'     more detail.
 #' @param bucket character(1). The name of the bucket that the file is
-#'     located in. If not supplied, value in `gcs_get_global_bucket()`
-#'     will be used. If a full path to the file is provided in
+#'     located in. If a google uri to the file is provided in
 #'     `description`, this parameter will be ignored.
 #' @param billing_project logical(1) or character(1). If logical, whether users 
 #'     should pay the cost for accessing the data. The 
@@ -54,7 +56,7 @@ gcs_connection <-
              open = "rb",
              encoding = getOption("encoding"),
              bucket = NULL,
-             billing_project = gcs_get_user_pay())
+             billing_project = gcs_get_requester_pays())
 {
     # Convert any non-character object to character
     temp <- nonchar_to_char(description,
@@ -70,28 +72,20 @@ gcs_connection <-
         is_scalar_character(encoding)
     )
     
-    ## get the file name and bucket name from description
-    if (is_google_uri(description) && !is.null(bucket)) {
-        stop(
-            "argument `bucket` must be NULL when a google URI is provided"
-        )
-    }
-        
-    if (is_google_uri(description)) {
-        file_info <- decompose_google_uri(description, is_folder = FALSE)
-        bucket <- file_info$bucket
-        file <- file_info$path_string
-    } else {
-        ## If unable to get the bucket name, use the default setting
-        if (is.null(bucket)) {
-            bucket <- googleCloudStorageR::gcs_get_global_bucket()
-        }
-        file <- description
+    ## if bucket is not NULL
+    ## we need to update the uri in description
+    if(!is.null(bucket)){
+        if(is_google_uri(description))
+            stop(
+                "argument `bucket` must be NULL when a google URI is provided"
+            )
+        else
+            description <- get_google_uri(bucket, description)
     }
     
-    description <- get_google_uri(bucket, file)
-    
-    token <- get_token()
+    file_info <- decompose_google_uri(description, is_folder = FALSE)
+    bucket <- file_info$bucket
+    file <- file_info$path_string
         
     UTF8 <- identical(encoding, "UTF8")
     is_text <- !grepl("b", open, fixed = TRUE)
@@ -138,7 +132,7 @@ gcs_connection <-
 #' destination file will be overwritten.
 #'
 #' @param from,to character(1). The path to the folder/file.  At least
-#'     one path must be a google URL. It is recommended to explicitly
+#'     one path must be a google URI. It is recommended to explicitly
 #'     add a trailing "/" if the parameter is a path to a folder.
 #' @param recursive logical(1). Whether to recursively copy the files in
 #'     the subfolders.
@@ -163,7 +157,7 @@ gcs_connection <-
 #' list.files(folder_path)
 #'
 #' @export
-gcs_cp <- function(from, to, recursive = TRUE, billing_project = gcs_get_user_pay()) {
+gcs_cp <- function(from, to, recursive = TRUE, billing_project = gcs_get_requester_pays()) {
     missing_billing_project <- missing(billing_project)
     ## Convert any non-character object to character
     temp <- nonchar_to_char(to, 
@@ -250,7 +244,7 @@ gcs_cp <- function(from, to, recursive = TRUE, billing_project = gcs_get_user_pa
 #' `FolderClass` object or a `FileClass` object
 #'
 #' @export
-gcs_dir <- function(path, delimiter = TRUE, billing_project = gcs_get_user_pay()) {
+gcs_dir <- function(path, delimiter = TRUE, billing_project = gcs_get_requester_pays()) {
     ## Convert any non-character object to character
     temp <- nonchar_to_char(path, 
                             billing_project = billing_project, 
@@ -399,7 +393,7 @@ gcs_cloud_auth <-
             } else {
                 ## if the json file does not exist, clear out credentials
                 .credentials(NULL)
-                .billing_project(NULL, user_pay = FALSE, showError = FALSE)
+                .billing_project(NULL, requester_pays = FALSE, showError = FALSE)
             }
         }
     }
@@ -428,20 +422,20 @@ print.auth <- function(x, ...) {
     if (is.null(x$token)) {
         cat("Token:\tNULL\n")
     } else {
-        cat("Token:\n", x$token, "\n")
+        cat("Token:\tExist\n")
     }
     ## print billing project ID
     cat("Billing project ID: ", x[["billing project"]], "\n")
     ## print authen source
     if (!x[["gcloud auth"]]) {
-        cat("authen source:\tJSON file\n")
+        cat("auth source:\tJSON file\n")
     } else {
-        cat("authen source:\tgcloud\n")
+        cat("auth source:\tgcloud\n")
         if (is.null(x[["gcloud account"]])) {
-            cat("authen account:\tDefault\n")
+            cat("auth account:\tDefault\n")
         } else {
             cat(
-                "authen account:\t",
+                "auth account:\t",
                 x[["gcloud account"]], "\n"
             )
         }
@@ -454,15 +448,16 @@ print.auth <- function(x, ...) {
 #' billing target and check if a bucket has Requester Pays enabled. See
 #' the details section in `?authentication` for more information.
 #' 
+#' @param x logical(1), whether the user should pay for the cost.
 #' @param bucket character(1), the bucket name
 #' @inheritParams gcs_cloud_auth
 #' @rdname requester_pays
 #' @examples 
 #' gcs_get_billing_project()
-#' gcs_get_user_pay()
+#' gcs_get_requester_pays()
 #' @return 
 #' gcs_get_billing_project: character(1) or NULL
-#' gcs_get_user_pay: logical(1)
+#' gcs_get_requester_pays: logical(1)
 #' @export
 gcs_set_billing_project <- function(billing_project = NULL, gcloud = FALSE){
     if(gcloud && is.null(billing_project)){
@@ -484,22 +479,22 @@ gcs_get_billing_project <- function(){
 
 #' @rdname requester_pays
 #' @export
-gcs_get_user_pay <- function(){
-    .user_pay()
+gcs_get_requester_pays <- function(){
+    .requester_pays()
 }
 
 
 #' @rdname requester_pays
 #' @export
-gcs_set_user_pay <- function(x){
-    .user_pay(x)
+gcs_set_requester_pays <- function(x){
+    .requester_pays(x)
 }
 
 
 #' @rdname requester_pays
 #' @export
-is_requester_pay <- function(bucket){
-    .is_requester_pay(bucket)
+gcs_is_requester_pays <- function(bucket){
+    .is_requester_pays(bucket)
 }
 
 #' Get/Set read/write connection buffer size

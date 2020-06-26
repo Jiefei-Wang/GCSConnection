@@ -2,6 +2,10 @@
 ##########################################
 ## file class utils
 ##########################################
+## Defined in Folder class utils:
+## .full_path_vector
+
+
 .bucket_name <- function(x) x@bucket_name
 
 
@@ -19,6 +23,7 @@
 
 .lastModified <- function(x) x@lastModified
 
+.url <- function(x) get_google_url(.full_path_vector(x))
 
 `.bucket_name<-` <- function(x, value) {
     if(is.null(value))
@@ -66,3 +71,4 @@
     x@lastModified <- value
     x
 }
+

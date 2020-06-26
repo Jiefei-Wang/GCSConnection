@@ -28,8 +28,9 @@ setMethod("show", signature("FileClass"), function(object) {
     cat("Bucket:", .bucket_name(object), "\n")
     cat("Size:  ", printable_size(as.numeric(.file_size(object))), " \n")
     cat("Type:  ", .file_type(object), "\n")
-    cat("URI:   ", .uri(object), "\n")
     cat("Last modified:", .lastModified(object), "\n")
+    cat("URI:   ", .uri(object), "\n")
+    cat("URL:   ", .url(object), "\n")
     cat("Billing project:", .class_billing_project(object), "\n")
     invisible(object)
 })
@@ -118,7 +119,7 @@ setMethod("names", signature("FileClass"),
           function(x)
           {
               c("full_path_vector", "bucket_name", "file_name",
-                "file_size", "file_type", "URI", "lastModified","billing_project",
+                "file_size", "file_type", "URI", "URL", "lastModified","billing_project",
                 "copy_to", "delete", "get_connection")
           })
 

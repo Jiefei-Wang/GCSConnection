@@ -3,20 +3,20 @@
 \name{gcs_set_billing_project}
 \alias{gcs_set_billing_project}
 \alias{gcs_get_billing_project}
-\alias{gcs_get_user_pay}
-\alias{gcs_set_user_pay}
-\alias{is_requester_pay}
+\alias{gcs_get_requester_pays}
+\alias{gcs_set_requester_pays}
+\alias{gcs_is_requester_pays}
 \title{Requester Pays}
 \usage{
 gcs_set_billing_project(billing_project = NULL, gcloud = FALSE)
 
 gcs_get_billing_project()
 
-gcs_get_user_pay()
+gcs_get_requester_pays()
 
-gcs_set_user_pay(x)
+gcs_set_requester_pays(x)
 
-is_requester_pay(bucket)
+gcs_is_requester_pays(bucket)
 }
 \arguments{
 \item{billing_project}{character(1) or NULL. The project's ID which 
@@ -27,13 +27,13 @@ overwrite the default setting. See details.}
 Google Cloud Storage.  If the value is `TRUE`, the parameter
 `json_file` will be ignored. See details.}
 
-\item{x}{Used for the S3 `print` function only}
+\item{x}{logical(1), whether the user should pay for the cost.}
 
 \item{bucket}{character(1), the bucket name}
 }
 \value{
 gcs_get_billing_project: character(1) or NULL
-gcs_get_user_pay: logical(1)
+gcs_get_requester_pays: logical(1)
 }
 \description{
 These functions allow you to set billing project, change the default 
@@ -42,5 +42,5 @@ the details section in `?authentication` for more information.
 }
 \examples{
 gcs_get_billing_project()
-gcs_get_user_pay()
+gcs_get_requester_pays()
 }

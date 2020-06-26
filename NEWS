@@ -1,3 +1,7 @@
+Changes in version 1.1.3
++ FileClass object can show the file URL now
++ no warning will be given if `gcs_dir` find a non-standard file path
++ Fix some word issues: all xxx_url functions are renamed to xxx_uri
 Changes in version 1.1.2
 + Support Requester Pays
 + Support `~` symbol to go to the bucket root

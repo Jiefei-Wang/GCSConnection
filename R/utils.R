@@ -39,22 +39,22 @@ get_combined_path <- function(path_vec, is_folder) {
 ## Convert size in byte to a character format for print
 printable_size <- function(size_list) {
     result <- rep("", length(size_list))
-
+    
     ind <- size_list < 10^3
     result[ind] <- paste0(size_list[ind], "B")
-
+    
     ind <- size_list >= 10^3 & size_list < 10^6
     result[ind] <- paste0(my_ceiling(size_list[ind] / 10^3, digit = 1), "KB")
-
+    
     ind <- size_list >= 10^6 & size_list < 10^9
     result[ind] <- paste0(my_ceiling(size_list[ind] / 10^6, digit = 1), "MB")
-
+    
     ind <- size_list >= 10^9 & size_list < 10^12
     result[ind] <- paste0(my_ceiling(size_list[ind] / 10^9, digit = 1), "GB")
-
+    
     ind <- size_list >= 10^12
     result[ind] <- paste0(my_ceiling(size_list[ind] / 10^12, digit = 1), "TB")
-
+    
     result
 }
 
@@ -86,7 +86,7 @@ get_google_uri <- function(bucket, file, full_path_vector = NULL) {
         file <- full_path_vector[-1]
     }
     file_string <- get_combined_path(file, is_folder = FALSE)
-    paste0("gs://", bucket, .delimiter(), file_string)
+    paste0("gs://", bucket, "/", file_string)
 }
 
 
@@ -98,19 +98,19 @@ decompose_google_uri <- function(x, is_folder = NULL) {
     if (is.null(is_folder)) {
         is_folder <- is_uri_folder_path(x)
     }
-
+    
     if (is_folder) {
         full_path_vector <- split_folder_path(x)
     } else {
         full_path_vector <- split_file_path(x)
     }
-
+    
     bucket <- full_path_vector[1]
     path_vector <- full_path_vector[-1]
     path_string <- get_combined_path(path_vector, is_folder)
-
+    
     list(
-        uri = x,
+        uri = x_std,
         bucket = bucket,
         path_vector = path_vector,
         full_path_vector = full_path_vector,
@@ -120,19 +120,19 @@ decompose_google_uri <- function(x, is_folder = NULL) {
 }
 
 
-# digest_path <- function(description, bucket = NULL) {
-#     if (is_google_uri(description)) {
-#         bucket <- strsplit(description, "/")[[1]][3]
-#         file <- sub(paste0("gs://", bucket, "/"), "", description)
-#     } else {
-#         file <- description
-#     }
-#     list(file = file, bucket = bucket)
-# }
+get_google_url <- function(full_path_vector){
+    bucket <- full_path_vector[1]
+    file <- full_path_vector[-1]
+    file_string <- get_combined_path(file, is_folder = FALSE)
+    paste0("https://console.cloud.google.com/storage/browser/",
+           bucket,
+           "/?prefix=",
+           URLencode(file_string,reserved = TRUE))
+}
 
 
 ## The input should be either a file path on a disk or a google cloud
-## URL used by gcs_cp
+## URI used by gcs_cp
 ## it will check the existance of the file/folder
 ## and add a trailing slash if it is a folder.
 standardize_file_path <- function(x, billing_project = NULL) {

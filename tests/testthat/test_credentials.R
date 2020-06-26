@@ -18,6 +18,6 @@ test_that("Billing project", {
 })
 
 test_that("requester pays", {
-    expect_true(is_requester_pay("bioconductor_rp"))
-    expect_false(is_requester_pay("genomics-public-data"))
+    expect_true(gcs_is_requester_pays("bioconductor_rp"))
+    expect_false(gcs_is_requester_pays("genomics-public-data"))
 })

@@ -107,13 +107,13 @@ refresh_list <- function(x) {
     ## Somehow someone did do it. Wired
     ind <- which(.file_names(x) == "")
     if (length(ind) != 0) {
-        if (.file_sizes(x)[ind] != 0) {
-            warning(
-                "Non-standard end of the file name(a slash) has been found",
-                "it will be ignored:\n",
-                all_names[ind]
-            )
-        }
+        # if (.file_sizes(x)[ind] != 0) {
+        #     warning(
+        #         "Non-standard end of the file name(a slash) has been found",
+        #         "and will be ignored:\n",
+        #         get_combined_path(full_path_vector, is_folder = TRUE)
+        #     )
+        # }
         .file_names(x) <- .file_names(x)[-ind]
         .file_sizes(x) <- .file_sizes(x)[-ind]
         .file_types(x) <- .file_types(x)[-ind]

@@ -2,7 +2,7 @@ package_settings <- new.env()
 
 package_settings[["credentials"]] <- NULL
 
-package_settings[["user_pay"]] <- FALSE
+package_settings[["requester_pays"]] <- FALSE
 
 package_settings[["billing_project"]] <- NULL
 
@@ -26,25 +26,25 @@ package_settings[["delimiter"]] <- "/"
         package_settings[[".credentials"]] <- x
 }
 
-.user_pay <- function(x){
+.requester_pays <- function(x){
     if(missing(x))
-        package_settings[["user_pay"]]
+        package_settings[["requester_pays"]]
     else
-        package_settings[["user_pay"]] <- as.logical(x)
+        package_settings[["requester_pays"]] <- as.logical(x)
 }
 
-## user_pay: Wether to return a billing project.
+## requester_pays: Wether to return a billing project.
 ##           If FALSE, NULL value will be returned
 ## showError: Whether to show an error when the defult
 ##            billing project is NULL.
-.billing_project <- function(x, user_pay = TRUE, showError = TRUE){
+.billing_project <- function(x, requester_pays = TRUE, showError = TRUE){
     if(missing(x)){
         res <- package_settings[["billing_project"]]
-        if(showError && is.null(res) && user_pay){
+        if(showError && is.null(res) && requester_pays){
             stop("The billing project is not set, ",
                  "please set it via `gcs_set_billing_project()`")
         }
-        if(user_pay)
+        if(requester_pays)
             res
         else
             NULL
@@ -54,7 +54,7 @@ package_settings[["delimiter"]] <- "/"
 }
 
 .gcloud_account <- function(x){
-    if(missing(x))
+    if(missing(x)||is.null(x))
         package_settings[["gcloud_account"]]
     else
         package_settings[["gcloud_account"]] <- as.character(x)

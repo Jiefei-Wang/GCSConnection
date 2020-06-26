@@ -4,11 +4,11 @@
 \alias{gcs_cp}
 \title{copy files to and from buckets}
 \usage{
-gcs_cp(from, to, recursive = TRUE, billing_project = gcs_get_user_pay())
+gcs_cp(from, to, recursive = TRUE, billing_project = gcs_get_requester_pays())
 }
 \arguments{
 \item{from, to}{character(1). The path to the folder/file.  At least
-one path must be a google URL. It is recommended to explicitly
+one path must be a google URI. It is recommended to explicitly
 add a trailing "/" if the parameter is a path to a folder.}
 
 \item{recursive}{logical(1). Whether to recursively copy the files in

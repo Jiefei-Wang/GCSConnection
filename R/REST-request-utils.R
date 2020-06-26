@@ -30,20 +30,20 @@ catch_error <- function(r) {
 }
 
 
-## convert a list to an url-like format
+## convert a list to an uri-like format
 ##########################
 ## Example
 ##########################
-## .list_to_url(list(b="bucket",o="object"))
+## .list_to_uri(list(b="bucket",o="object"))
 ## #[1] "b/bucket/o/object"
-## .list_to_url(list(uploadType="resumable",name="object"), isQuery=TRUE)
+## .list_to_uri(list(uploadType="resumable",name="object"), isQuery=TRUE)
 ## #[1] "uploadType=resumable&name=object"
 ##########################
 ## Special condition handling
 ##########################
 ## If x contains any null value, it will be ignored
 ## If x contains any "", the list name will be preserved.
-.list_to_url <- function(x, isQuery = FALSE){
+.list_to_uri <- function(x, isQuery = FALSE){
     if(isQuery){
         assignment <- "="
         separater <- "&"
@@ -66,11 +66,11 @@ catch_error <- function(r) {
 }
 
 
-## construct a json url
+## construct a json uri
 ##########################
 ## Parameter descriptions: 
 ##########################
-## ...: the additional parameters that will be append to the url
+## ...: the additional parameters that will be append to the uri
 ## query: The query paramters
 ## version: the api version
 ## upload: whether it is an upload api
@@ -78,9 +78,9 @@ catch_error <- function(r) {
 ## Example
 ##########################
 ## https://storage.googleapis.com/upload/storage/v1/b/myBucket/o?uploadType=resumable
-## .json_url(b="mybucket", o=NULL, query=list(uploadType="resumable"), upload=TRUE)
+## .json_uri(b="mybucket", o=NULL, query=list(uploadType="resumable"), upload=TRUE)
 ## [1] "https://storage.googleapis.com/upload/storage/b/mybucket/o?uploadType=resumable"
-.json_url <- function(..., query = NULL, version = "v1", upload = FALSE, 
+.json_uri <- function(..., query = NULL, version = "v1", upload = FALSE, 
                       billing_project = NULL){
     if(!is.null(billing_project)){
         if(is.null(query))
@@ -89,16 +89,16 @@ catch_error <- function(r) {
     }
     base <- "https://storage.googleapis.com"
     if(upload)
-        url_type <- "/upload/storage"
+        uri_type <- "/upload/storage"
     else
-        url_type <- "/storage"
-    ## the additional characters that will be append to the url
+        uri_type <- "/storage"
+    ## the additional characters that will be append to the uri
     request <- list(...)
-    request_url <- .list_to_url(request, isQuery = FALSE)
-    if(request_url!="")
-        request_url <- paste0("/", request_url)
-    query_url <- .list_to_url(query, isQuery = TRUE)
-    if(query_url!="")
-        query_url <- paste0("?", query_url)
-    paste0(base,url_type,"/",version,request_url,query_url)
+    request_uri <- .list_to_uri(request, isQuery = FALSE)
+    if(request_uri!="")
+        request_uri <- paste0("/", request_uri)
+    query_uri <- .list_to_uri(query, isQuery = TRUE)
+    if(query_uri!="")
+        query_uri <- paste0("?", query_uri)
+    paste0(base,uri_type,"/",version,request_uri,query_uri)
 }

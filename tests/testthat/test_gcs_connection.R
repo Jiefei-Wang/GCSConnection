@@ -4,6 +4,45 @@ gcs_cloud_auth(json_file = NULL)
 
 URI <-
   "gs://genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
+
+
+test_that("four ways to find the file", {
+  info <- decompose_google_uri(URI)
+  expect_error(
+    con <- 
+      gcs_connection(
+        description = URI,
+        open = "r"),
+    NA)
+  close(con)
+  
+  expect_error(
+    con <- 
+      gcs_connection(
+        description = paste0(info$full_path_vector, collapse = "/"),
+        open = "r"),
+    NA)
+  close(con)
+  
+  
+  expect_error(
+    con <- 
+      gcs_connection(
+        description = paste0(info$path_vector, collapse = "/"),
+        bucket = info$bucket,
+        open = "r"),
+    NA)
+  close(con)
+  
+  expect_error(con <- 
+                 gcs_connection(
+                   description = URI,
+                   bucket = info$bucket,
+                   open = "r"))
+})
+
+
+
 test_that("Public data access, text mode", {
   con <-
     gcs_connection(description = URI,

@@ -1,4 +1,4 @@
-json_url <- function(bucket, file = NULL, query = NULL,  upload = FALSE, 
+json_uri <- function(bucket, file = NULL, query = NULL,  upload = FALSE, 
                      billing_project = NULL) {
     if (!is.null(file)&&length(file)!=0) {
         file <- get_combined_path(
@@ -6,13 +6,13 @@ json_url <- function(bucket, file = NULL, query = NULL,  upload = FALSE,
             is_folder = FALSE
         )
     }
-    .json_url(b = bucket, o=file, query = query, 
+    .json_uri(b = bucket, o=file, query = query, 
               upload = upload, billing_project = billing_project)
 }
 
 
-json_upload_url <- function(bucket, file, resumable = TRUE, billing_project = NULL) {
-    json_url(bucket = bucket, file = "",
+json_upload_uri <- function(bucket, file, resumable = TRUE, billing_project = NULL) {
+    json_uri(bucket = bucket, file = "",
              query = 
                  list(uploadType = ifelse(resumable, "resumable", "media"),
                       name = get_combined_path(
@@ -30,7 +30,7 @@ json_upload_url <- function(bucket, file, resumable = TRUE, billing_project = NU
 ## This xml function is for the read connection only
 ## The JSON API does not support reading a range
 ## of bytes from a file
-xml_url <- function(bucket, file, billing_project) {
+xml_uri <- function(bucket, file) {
     bucket <- URLencode(bucket, reserved = TRUE)
     file <- URLencode(file, reserved = TRUE)
     paste0("https://storage.googleapis.com/", bucket, "/", file)
@@ -41,10 +41,10 @@ get_range <- function(start, end) {
     paste0("bytes=", start, "-", end)
 }
 
-download_data <- function(url, start, end, billing_project) {
+download_data <- function(uri, start, end, billing_project) {
     auth <- get_token()
     r <- GET(
-        url,
+        uri,
         add_headers(
             Authorization = auth,
             range = get_range(start, end),
@@ -55,11 +55,11 @@ download_data <- function(url, start, end, billing_project) {
     content(r, as = "raw")
 }
 
-## For the write connection, the url is a
+## For the write connection, the uri is a
 ## JASON API
-start_upload <- function(url, content_type = "application/octet-stream") {
+start_upload <- function(uri, content_type = "application/octet-stream") {
     r <- POST(
-        url,
+        uri,
         add_headers(
             Authorization = get_token(),
             `X-Upload-Content-Type` = content_type
@@ -70,7 +70,7 @@ start_upload <- function(url, content_type = "application/octet-stream") {
 }
 
 
-upload_data <- function(signed_url, data, start, end, final = FALSE) {
+upload_data <- function(signed_uri, data, start, end, final = FALSE) {
     final <- final || is.null(data)
     if (final) {
         if (is.null(data)) {
@@ -82,7 +82,7 @@ upload_data <- function(signed_url, data, start, end, final = FALSE) {
         range <- paste0("bytes ", start, "-", end, "/*")
     }
     r <- PUT(
-        signed_url,
+        signed_uri,
         add_headers(
             `Content-Length` = length(data),
             `Content-Range` = range
@@ -97,17 +97,17 @@ upload_data <- function(signed_url, data, start, end, final = FALSE) {
 }
 
 
-stop_upload <- function(signed_url, data_length) {
+stop_upload <- function(signed_uri, data_length) {
     r <- DELETE(
-        signed_url,
+        signed_uri,
         add_headers(`Content-Length` = 0)
     )
     catch_error(r)
     r
 }
 
-get_file_size <- function(url, billing_project) {
-    r <- HEAD(url, 
+get_file_size <- function(uri, billing_project) {
+    r <- HEAD(uri, 
               add_headers(Authorization = get_token(),
                           `x-goog-user-project` = billing_project))
     catch_error(r)
@@ -133,10 +133,10 @@ copy_data_on_cloud <- function(from_full_path_vector, to_full_path_vector,
         is_folder = FALSE
     )
     
-    url <- .json_url(b=from_bucket,o=from_file,copyTo="",
+    uri <- .json_uri(b=from_bucket,o=from_file,copyTo="",
                      b=to_bucket,o=to_file,billing_project = billing_project)
     r <- POST(
-        url,
+        uri,
         add_headers(
             Authorization = get_token()
         )
@@ -147,10 +147,10 @@ copy_data_on_cloud <- function(from_full_path_vector, to_full_path_vector,
 download_data_to_disk <- function(full_path_vector, disk_path, billing_project = NULL) {
     bucket <- full_path_vector[1]
     file <- full_path_vector[-1]
-    url <- json_url(bucket = bucket, file = file, 
+    uri <- json_uri(bucket = bucket, file = file, 
                     query = list(alt = "media"), billing_project = billing_project)
     r <- GET(
-        url,
+        uri,
         add_headers(
             Authorization = get_token()
         ),
@@ -163,10 +163,10 @@ download_data_to_disk <- function(full_path_vector, disk_path, billing_project =
 upload_data_from_disk <- function(disk_path, full_path_vector, billing_project = NULL) {
     bucket <- full_path_vector[1]
     file <- full_path_vector[-1]
-    url <- json_upload_url(bucket, file, resumable = FALSE, 
+    uri <- json_upload_uri(bucket, file, resumable = FALSE, 
                            billing_project = billing_project)
     r <- POST(
-        url,
+        uri,
         add_headers(
             Authorization = get_token()
         ),
@@ -192,7 +192,7 @@ list_files <-
         }
         
         
-        url <- json_url(bucket = bucket, file = "", query = list(
+        uri <- json_uri(bucket = bucket, file = "", query = list(
             delimiter = delimiter,
             prefix = path_string_encoded,
             pageToken = next_page_token
@@ -200,7 +200,7 @@ list_files <-
         billing_project = billing_project
         )
         r <- GET(
-            url,
+            uri,
             add_headers(
                 Authorization = get_token()
             )
@@ -235,10 +235,10 @@ get_file_meta <- function(full_path_vector, noError = FALSE, billing_project = N
     file <- full_path_vector[-1]
     if(length(file)==0)
         file = ""
-    url <- json_url(bucket = bucket, file = file, 
+    uri <- json_uri(bucket = bucket, file = file, 
                     query = list(alt = "json"), billing_project = billing_project)
     r <- GET(
-        url,
+        uri,
         add_headers(
             Authorization = get_token()
         )
@@ -268,10 +268,10 @@ exist_folder <- function(full_path_vector, billing_project = NULL) {
 delete_file <- function(full_path_vector, billing_project = NULL) {
     bucket <- full_path_vector[1]
     file <- full_path_vector[-1]
-    url <- json_url(bucket = bucket, file = file, billing_project = billing_project)
+    uri <- json_uri(bucket = bucket, file = file, billing_project = billing_project)
     auth <- get_token()
     r <- DELETE(
-        url,
+        uri,
         add_headers(
             Authorization = get_token()
         )
@@ -279,10 +279,10 @@ delete_file <- function(full_path_vector, billing_project = NULL) {
     catch_error(r)
 }
 
-.is_requester_pay <- function(bucket){
-    url <- json_url(bucket = bucket, query = list(fields = "billing"))
+.is_requester_pays <- function(bucket){
+    uri <- json_uri(bucket = bucket, query = list(fields = "billing"))
     r <- GET(
-        url,
+        uri,
         add_headers(
             Authorization = get_token()
         )

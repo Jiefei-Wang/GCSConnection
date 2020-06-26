@@ -80,3 +80,53 @@ test_that("gcs_dir: build connection/download file/delete file",{
     expect_true(is(x$delete,"function"))
 })
 
+
+test_that("gcs_dir: convert to character",{
+    ## Folder class to character
+    uri <- "gs://genomics-public-data/clinvar/"
+    x <- gcs_dir(uri)
+    expect_equal(as.character(x), uri)
+    
+    ## File class to character
+    x <- gcs_dir(URI)
+    expect_equal(as.character(x), URI)
+})
+
+
+test_that("gcs_dir: work with gcs_connection",{
+    x <- gcs_dir(URI)
+    expect_error(con <- gcs_connection(x), NA)
+    close(con)
+})
+
+
+test_that("gcs_dir: work with gcs_cp",{
+    ## download file
+    x <- gcs_dir(URI)
+    tmp_path <- tempdir()
+    tmp_file_path <- paste0(tmp_path, "/test.vcf")
+    if(file.exists(tmp_file_path))
+        file.remove(tmp_file_path)
+    gcs_cp(x, tmp_file_path)
+    file_info <- file.info(tmp_file_path)
+    expect_equal(file_info$size, as.numeric(x$file_size))
+    
+    ## download Folder
+    x <- gcs_dir("gs://genomics-public-data")
+    file_names <- names(x)[.file_types(x)=="file"]
+    tmp_path <- tempdir()
+    for(i in file_names){
+        file_path <- paste0(tmp_path,"/",i)
+        if(file.exists(file_path))
+            file.remove(file_path)
+    }
+    gcs_cp(x, tmp_path, recursive = FALSE)
+    expect_true(all(file_names%in%list.files(tmp_path)))
+})
+
+
+test_that("gcs_dir: work with gcs_dir",{
+    x <- gcs_dir(URI)
+    expect_error(y <- gcs_dir(x), NA)
+})
+

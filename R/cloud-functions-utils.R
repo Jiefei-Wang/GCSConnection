@@ -131,7 +131,7 @@ nonchar_to_char <- function(x, billing_project, missing_billing_project){
 
 get_billing_project <- function(x){
     if(is.logical(x)){
-        billing_project <- .billing_project(user_pay = x)
+        billing_project <- .billing_project(requester_pays = x)
     }else{
         billing_project <- x
     }

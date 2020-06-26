@@ -250,10 +250,10 @@ SEXP get_bucket_connection(string bucket, string file,
 	bc->signed_url = R_NilValue;
 	bc-> billing_project = billing_project;
 	if (is_read) {
-		bc->file_url = make_call("xml_url", wrap(bucket), wrap(file));
+		bc->file_url = make_call("xml_uri", wrap(bucket), wrap(file));
 	}
 	else {
-		bc->file_url = make_call("json_upload_url", wrap(bucket), wrap(file), wrap(true), bc->billing_project);
+		bc->file_url = make_call("json_upload_uri", wrap(bucket), wrap(file), wrap(true), bc->billing_project);
 	}
 	R_PreserveObject(bc->file_url);
 	R_PreserveObject(bc->billing_project);
