@@ -86,6 +86,7 @@ gcs_connection <-
     file_info <- decompose_google_uri(description, is_folder = FALSE)
     bucket <- file_info$bucket
     file <- file_info$path_string
+    description <- file_info$uri
         
     UTF8 <- identical(encoding, "UTF8")
     is_text <- !grepl("b", open, fixed = TRUE)
@@ -460,6 +461,11 @@ print.auth <- function(x, ...) {
 #' gcs_get_requester_pays: logical(1)
 #' @export
 gcs_set_billing_project <- function(billing_project = NULL, gcloud = FALSE){
+    if(is.logical(billing_project)){
+        stop("The argument <billing_project> must be a character.\n",
+             "If you want to enable your billing project in every function call,\n",
+             "you need to call the function `gcs_set_requester_pays`")
+    }
     if(gcloud && is.null(billing_project)){
         .billing_project(
             system2("gcloud", c("config", "get-value", "project"), stdout = TRUE)

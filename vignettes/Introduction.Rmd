@@ -74,6 +74,7 @@ gcs_get_cloud_auth()
 
 [Google Authentication]: https://cloud.google.com/docs/authentication/production
 
+
 # Manually create connections
 
 Creating a connection to a file in a bucket is simple, you can simply
@@ -81,6 +82,8 @@ provide an URL to `gcs_connection`. Below is an example to create a
 read connection to a public dataset on Google Cloud Platform.
 
 ```{r}
+## equivalent:
+## file <- "genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
 file <- "gs://genomics-public-data/NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
 con <- gcs_connection(description = file, open = "r")
 readLines(con, n = 2L)
@@ -158,24 +161,26 @@ myfile <- x[["README.txt"]]
 myfile
 ```
 
-You can also use `..` to go to the parent folder
+You can also use `..` to go to the parent folder, `~` to go to the bucket root.
 
 ```{r}
-## equivalent: x$`..`
-x[[".."]]
+## equivalent: myfile$`..`
 myfile[[".."]]
+
+## myfile$`~`
+myfile[["~"]]
 ```
 
 The connection can be made by
 
 ```{r}
+## Equivalent: gcs_connection(myfile)
 con <- myfile$get_connection(open = "r")
 con
 close(con)
 ```
 
-You can also query file info, copy, delete files through via the file
-manager
+Note that you can pass a file object to the function `gcs_connection`. The function `gcs_cp` supports both file and folder objects. You can query file info, copy, delete files through via the file manager
 
 ```{r}
 ## Get file name
@@ -197,6 +202,19 @@ file.exists(file.path(destination,myfile$file_name))
 Note that you cannot delete a folder since beforementioned file
 hierarchy issue. Once all files in a folder has been deleted, the
 folder will be removed.
+
+# Requester pays
+Some buckets have requester pays enabled, which means you are responsible for the cost of accessing the data in the bucket. Therefore, you must have a valid billing project for reading the data in the bucket. By default, if you use JSON file to authenticate with Google Cloud, the billing project is the project listed in the JSON file, which is the project that you use to generate the JSON file. If you use gcloud, the billing project is the default project in your config file. You can view and change the default billing project via
+```{r}
+gcs_get_billing_project()
+gcs_set_billing_project("your project ID")
+```
+For accessing the data in the bucket, you also need to pass the argument `billing_project = TRUE` to the gcs functions that you want to use. For example, if `uri` is a path to a file in a requester pays bucket, you can view its information via `gcs_dir(uri, billing_project = TRUE)`. Please keep in mind that you will `get charged` if you send a billing project to a bucket which do not have requester pays enabled. Therefore, the default behavior of all gcs functions is to access the bucket without a billing project. If you want your billing project being involved in every gcs function, you can alter this setting by
+```{r}
+gcs_set_requester_pays(TRUE)
+gcs_get_requester_pays()
+```
+
 
 # Buffer size
 
