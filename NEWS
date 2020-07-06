@@ -1,3 +1,6 @@
+Changes in version 1.1.4
++ gcs_is_requester_pays supports uri
++ Better print format in gcs_get_cloud_auth 
 Changes in version 1.1.3
 + FileClass object can show the file URL now
 + no warning will be given if `gcs_dir` find a non-standard file path

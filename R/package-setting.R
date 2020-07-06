@@ -2,6 +2,8 @@ package_settings <- new.env()
 
 package_settings[["credentials"]] <- NULL
 
+package_settings[["json_path"]] <- NULL
+
 package_settings[["requester_pays"]] <- FALSE
 
 package_settings[["billing_project"]] <- NULL
@@ -95,4 +97,10 @@ package_settings[["delimiter"]] <- "/"
         package_settings[["delimiter"]] <- as.character(x)
 }
 
+.json_path <- function(x){
+    if(missing(x))
+        package_settings[["json_path"]]
+    else
+        package_settings[["json_path"]] <- as.character(x)
+}
 

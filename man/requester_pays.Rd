@@ -29,7 +29,7 @@ Google Cloud Storage.  If the value is `TRUE`, the parameter
 
 \item{x}{logical(1), whether the user should pay for the cost.}
 
-\item{bucket}{character(1), the bucket name}
+\item{bucket}{character(1), the bucket name or uri}
 }
 \value{
 gcs_get_billing_project: character(1) or NULL

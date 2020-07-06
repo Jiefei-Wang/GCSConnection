@@ -2,12 +2,12 @@
 % Please edit documentation in R/FolderClass.R
 \name{$,FolderClass-method}
 \alias{$,FolderClass-method}
-\alias{[[,FolderClass-method}
+\alias{[[,FolderClass,ANY,ANY-method}
 \title{Get an element from `FolderClass` object}
 \usage{
 \S4method{$}{FolderClass}(x, name)
 
-\S4method{[[}{FolderClass}(x, i, exact = TRUE)
+\S4method{[[}{FolderClass,ANY,ANY}(x, i, exact = TRUE)
 }
 \arguments{
 \item{x}{an object of class `FolderClass`}

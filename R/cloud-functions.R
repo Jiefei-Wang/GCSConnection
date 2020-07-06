@@ -365,6 +365,7 @@ gcs_cloud_auth <-
             }
             ## if the json file exist
             if (!is.null(json_file)) {
+                json_file <- normalizePath(json_file, mustWork = FALSE)
                 tryCatch({
                     gar <- gar_auth_service(
                         json_file = json_file,
@@ -376,6 +377,7 @@ gcs_cloud_auth <-
                     }else{
                         gcs_set_billing_project(billing_project = billing_project)
                     }
+                    .json_path(json_file)
                     
                 },
                 warning = function(w) {
@@ -393,6 +395,7 @@ gcs_cloud_auth <-
                 )
             } else {
                 ## if the json file does not exist, clear out credentials
+                .json_path(NULL)
                 .credentials(NULL)
                 .billing_project(NULL, requester_pays = FALSE, showError = FALSE)
             }
@@ -405,10 +408,10 @@ gcs_cloud_auth <-
 gcs_get_cloud_auth <- function() {
     token <- get_token()
     x <- list(
-        token = token,
-        `gcloud auth` = .is_gcloud(),
-        `gcloud account` = .gcloud_account(),
-        `billing project` = gcs_get_billing_project()
+        token_exist = is.null(token),
+        gcloud_auth = .is_gcloud(),
+        gcloud_account = .gcloud_account(),
+        billing_project = gcs_get_billing_project()
     )
     structure(x, class = "auth")
 }
@@ -420,24 +423,24 @@ gcs_get_cloud_auth <- function() {
 #' @export
 print.auth <- function(x, ...) {
     ## print token
-    if (is.null(x$token)) {
+    if (x$token_exist) {
         cat("Token:\tNULL\n")
     } else {
-        cat("Token:\tExist\n")
+        cat("Token:\t******\n")
     }
     ## print billing project ID
-    cat("Billing project ID: ", x[["billing project"]], "\n")
+    cat("Billing project ID: ", x$billing_project, "\n")
     ## print authen source
-    if (!x[["gcloud auth"]]) {
+    if (!x$gcloud_auth) {
         cat("auth source:\tJSON file\n")
     } else {
         cat("auth source:\tgcloud\n")
-        if (is.null(x[["gcloud account"]])) {
+        if (is.null(x$gcloud_auth)) {
             cat("auth account:\tDefault\n")
         } else {
             cat(
                 "auth account:\t",
-                x[["gcloud account"]], "\n"
+                x$gcloud_auth, "\n"
             )
         }
     }
@@ -450,7 +453,7 @@ print.auth <- function(x, ...) {
 #' the details section in `?authentication` for more information.
 #' 
 #' @param x logical(1), whether the user should pay for the cost.
-#' @param bucket character(1), the bucket name
+#' @param bucket character(1), the bucket name or uri
 #' @inheritParams gcs_cloud_auth
 #' @rdname requester_pays
 #' @examples 
@@ -500,6 +503,8 @@ gcs_set_requester_pays <- function(x){
 #' @rdname requester_pays
 #' @export
 gcs_is_requester_pays <- function(bucket){
+    info <- decompose_google_uri(bucket)
+    bucket <- info$bucket
     .is_requester_pays(bucket)
 }
 
