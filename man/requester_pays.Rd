@@ -19,15 +19,12 @@ gcs_set_requester_pays(x)
 gcs_is_requester_pays(bucket)
 }
 \arguments{
-\item{billing_project}{character(1) or NULL. The project's ID which 
-the charges will be sent to. If the value is not NULL, it will 
-overwrite the default setting. See details.}
+\item{billing_project}{The project's ID which the bill will be sent to.}
 
-\item{gcloud}{logical. Whether use gcloud to authenticate with
-Google Cloud Storage.  If the value is `TRUE`, the parameter
-`json_file` will be ignored. See details.}
+\item{gcloud}{logical(1), whether to use the default billing project
+in gcloud. If `gcloud = TRUE`, `billing_project` must be NULL.}
 
-\item{x}{logical(1), whether the user should pay for the cost.}
+\item{x}{logical(1), whether the user should pay for the cost by default.}
 
 \item{bucket}{character(1), the bucket name or uri}
 }

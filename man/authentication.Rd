@@ -44,7 +44,10 @@ Authenticate with Google Cloud Storage. You can download the JSON
 credential file from Google Gloud Platform. The package will search
 for the credentials from evironment variables
 `GOOGLE_APPLICATION_CREDENTIALS` or `GCS_AUTH_FILE` when it is
-onloaded. To redo the credentials initialization process after the
+loaded in R. If both variables are not set, the package will try
+to get your credentials from `gcloud` program. If it fails to find
+`gcloud`, you will use anonymous credentials. 
+To redo the credentials initialization process after the
 package is loaded. Simply call the `gcs_cloud_auth` function with
 no argument.
 }
@@ -76,10 +79,18 @@ no argument.
 \examples{
 ## Default authentication process
 gcs_cloud_auth()
-
 ## Show the credentials
 gcs_get_cloud_auth()
 
+## Anonymous credential
+gcs_cloud_auth(NULL)
+gcs_get_cloud_auth()
+
+## Use gcloud to do the authentication
+if(GCSConnection:::exists_gcloud()){
+    gcs_cloud_auth(gcloud = TRUE)
+    gcs_get_cloud_auth()
+}
 }
 \seealso{
 requester_pays

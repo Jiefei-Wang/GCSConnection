@@ -57,73 +57,73 @@ gcs_connection <-
              encoding = getOption("encoding"),
              bucket = NULL,
              billing_project = gcs_get_requester_pays())
-{
-    # Convert any non-character object to character
-    temp <- nonchar_to_char(description,
-                            billing_project = billing_project,
-                            missing_billing_project = missing(billing_project))
-    description <- temp$x
-    billing_project <- temp$billing_project
-    
-    stopifnot(
-        is_scalar_character_or_null(bucket),
-        is_scalar_character(description),
-        is_scalar_character(open),
-        is_scalar_character(encoding)
-    )
-    
-    ## if bucket is not NULL
-    ## we need to update the uri in description
-    if(!is.null(bucket)){
-        if(is_google_uri(description))
-            stop(
-                "argument `bucket` must be NULL when a google URI is provided"
-            )
-        else
-            description <- get_google_uri(bucket, description)
-    }
-    
-    file_info <- decompose_google_uri(description, is_folder = FALSE)
-    bucket <- file_info$bucket
-    file <- file_info$path_string
-    description <- file_info$uri
+    {
+        # Convert any non-character object to character
+        temp <- nonchar_to_char(description,
+                                billing_project = billing_project,
+                                missing_billing_project = missing(billing_project))
+        description <- temp$x
+        billing_project <- temp$billing_project
         
-    UTF8 <- identical(encoding, "UTF8")
-    is_text <- !grepl("b", open, fixed = TRUE)
-    is_read <- grepl("r", open, fixed = TRUE)
-    is_write <- grepl("w", open, fixed = TRUE)
-    
-    if (is_read && is_write) {
-        stop("connection must be in either read or write mode, but not both.")
+        stopifnot(
+            is_scalar_character_or_null(bucket),
+            is_scalar_character(description),
+            is_scalar_character(open),
+            is_scalar_character(encoding)
+        )
+        
+        ## if bucket is not NULL
+        ## we need to update the uri in description
+        if(!is.null(bucket)){
+            if(is_google_uri(description))
+                stop(
+                    "argument `bucket` must be NULL when a google URI is provided"
+                )
+            else
+                description <- get_google_uri(bucket, description)
+        }
+        
+        file_info <- decompose_google_uri(description, is_folder = FALSE)
+        bucket <- file_info$bucket
+        file <- file_info$path_string
+        description <- file_info$uri
+        
+        UTF8 <- identical(encoding, "UTF8")
+        is_text <- !grepl("b", open, fixed = TRUE)
+        is_read <- grepl("r", open, fixed = TRUE)
+        is_write <- grepl("w", open, fixed = TRUE)
+        
+        if (is_read && is_write) {
+            stop("connection must be in either read or write mode, but not both.")
+        }
+        
+        if (is_read) {
+            buff_length <- gcs_get_read_buff()
+        } else {
+            buff_length <- gcs_get_write_buff()
+        }
+        
+        ## add the billing project
+        billing_project <- get_billing_project(billing_project)
+        if(is.character(billing_project)){
+            description <- paste0(description,"(Billing project enabled)")
+        }
+        
+        auto_open <- TRUE
+        
+        get_bucket_connection(
+            bucket = bucket,
+            file = file,
+            is_read = is_read,
+            is_text = is_text,
+            UTF8 = UTF8,
+            auto_open = auto_open,
+            buff_length = buff_length,
+            description = description,
+            open_mode = open,
+            billing_project = billing_project
+        )
     }
-    
-    if (is_read) {
-        buff_length <- gcs_get_read_buff()
-    } else {
-        buff_length <- gcs_get_write_buff()
-    }
-    
-    ## add the billing project
-    billing_project <- get_billing_project(billing_project)
-    if(is.character(billing_project)){
-        description <- paste0(description,"(Billing project enabled)")
-    }
-    
-    auto_open <- TRUE
-    
-    get_bucket_connection(
-        bucket = bucket,
-        file = file,
-        is_read = is_read,
-        is_text = is_text,
-        UTF8 = UTF8,
-        auto_open = auto_open,
-        buff_length = buff_length,
-        description = description,
-        open_mode = open,
-        billing_project = billing_project
-    )
-}
 
 
 #' copy files to and from buckets
@@ -291,7 +291,10 @@ gcs_dir <- function(path, delimiter = TRUE, billing_project = gcs_get_requester_
 #' credential file from Google Gloud Platform. The package will search
 #' for the credentials from evironment variables
 #' `GOOGLE_APPLICATION_CREDENTIALS` or `GCS_AUTH_FILE` when it is
-#' onloaded. To redo the credentials initialization process after the
+#' loaded in R. If both variables are not set, the package will try
+#' to get your credentials from `gcloud` program. If it fails to find
+#' `gcloud`, you will use anonymous credentials. 
+#' To redo the credentials initialization process after the
 #' package is loaded. Simply call the `gcs_cloud_auth` function with
 #' no argument.
 #'
@@ -343,26 +346,47 @@ gcs_dir <- function(path, delimiter = TRUE, billing_project = gcs_get_requester_
 #' @examples
 #' ## Default authentication process
 #' gcs_cloud_auth()
-#' 
 #' ## Show the credentials
 #' gcs_get_cloud_auth()
+#' 
+#' ## Anonymous credential
+#' gcs_cloud_auth(NULL)
+#' gcs_get_cloud_auth()
 #'
+#' ## Use gcloud to do the authentication
+#' if(GCSConnection:::exists_gcloud()){
+#'     gcs_cloud_auth(gcloud = TRUE)
+#'     gcs_get_cloud_auth()
+#' }
 #' @export
 gcs_cloud_auth <-
     function(json_file, gcloud = FALSE, email = NULL, billing_project = NULL)
     {
+        quiet <- FALSE
+        ## Determine default authentication method
+        if (missing(json_file) && !gcloud) {
+            json_file <- get_credentials_from_environment()
+            ## If fail to find the JSON file and gcloud exist,
+            ## use gcloud instead
+            if(is.null(json_file) && exists_gcloud()){
+                gcloud = TRUE
+                quiet <- TRUE
+            }
+        }
         scope <- "https://www.googleapis.com/auth/devstorage.full_control"
         if (gcloud) {
             .is_gcloud(TRUE)
             .gcloud_token_time(Sys.time())
             .gcloud_account(email)
-            update_gcloud_token()
             gcs_set_billing_project(billing_project = billing_project, gcloud = TRUE)
+            success <- update_gcloud_token(quiet)
+            ## If fail to get credentials from gcloud
+            ## We use anonymous credential
+            if(!success){
+                gcs_cloud_auth(NULL)
+            }
         } else {
             .is_gcloud(FALSE)
-            if (missing(json_file)) {
-                json_file <- get_credentials_from_environment()
-            }
             ## if the json file exist
             if (!is.null(json_file)) {
                 json_file <- normalizePath(json_file, mustWork = FALSE)
@@ -435,12 +459,12 @@ print.auth <- function(x, ...) {
         cat("auth source:\tJSON file\n")
     } else {
         cat("auth source:\tgcloud\n")
-        if (is.null(x$gcloud_auth)) {
+        if (is.null(x$gcloud_account)) {
             cat("auth account:\tDefault\n")
         } else {
             cat(
                 "auth account:\t",
-                x$gcloud_auth, "\n"
+                x$gcloud_account, "\n"
             )
         }
     }
@@ -452,9 +476,11 @@ print.auth <- function(x, ...) {
 #' billing target and check if a bucket has Requester Pays enabled. See
 #' the details section in `?authentication` for more information.
 #' 
-#' @param x logical(1), whether the user should pay for the cost.
+#' @param x logical(1), whether the user should pay for the cost by default.
 #' @param bucket character(1), the bucket name or uri
-#' @inheritParams gcs_cloud_auth
+#' @param billing_project The project's ID which the bill will be sent to.
+#' @param gcloud logical(1), whether to use the default billing project
+#'  in gcloud. If `gcloud = TRUE`, `billing_project` must be NULL.
 #' @rdname requester_pays
 #' @examples 
 #' gcs_get_billing_project()
@@ -468,6 +494,9 @@ gcs_set_billing_project <- function(billing_project = NULL, gcloud = FALSE){
         stop("The argument <billing_project> must be a character.\n",
              "If you want to enable your billing project in every function call,\n",
              "you need to call the function `gcs_set_requester_pays`")
+    }
+    if(gcloud && !is.null(billing_project)){
+        stop("billing_project is not NULL and gcloud is TRUE!")
     }
     if(gcloud && is.null(billing_project)){
         .billing_project(

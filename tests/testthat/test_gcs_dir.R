@@ -60,6 +60,27 @@ test_that("gcs_dir: go to path",{
 })
 
 
+test_that("gcs_dir: basic accessor function for file class",{
+    x <- gcs_dir(URI)
+    
+    ## access basic information of a file class
+    expect_equal(x$full_path_vector, 
+                 c("genomics-public-data", 
+                   "NA12878.chr20.sample.DeepVariant-0.7.2.vcf"
+    ))
+    expect_equal(x$bucket_name, "genomics-public-data")
+    expect_equal(x$file_name, "NA12878.chr20.sample.DeepVariant-0.7.2.vcf")
+    expect_equal(x$file_size,"7194")
+    expect_equal(x$file_type, "text/vcard")
+    expect_equal(x$uri, URI)
+    expect_equal(x$url, "https://console.cloud.google.com/storage/browser/genomics-public-data/?prefix=NA12878.chr20.sample.DeepVariant-0.7.2.vcf")
+    expect_equal(x$lastModified, "2019-04-23T19:58:29.107Z")
+    expect_equal(x$billing_project, NULL)
+    
+    ## Case sensitivity test
+    expect_equal(x$uri, x$URI)
+    expect_equal(x$lastModified, x$lastmodified)
+})
 
 test_that("gcs_dir: build connection/download file/delete file",{
     x <- gcs_dir(URI)

@@ -2,7 +2,8 @@
 ## 1. on-disk folder -> cloud
 ## 2. cloud folder -> disk/cloud
 gcs_cp_folder <-
-    function(from, to, from_cloud, to_cloud, recursive, billing_project)
+    function(from, to, from_cloud, to_cloud, 
+             recursive, billing_project)
 {
     if (!from_cloud) {
         ## If the source is on a disk
@@ -56,16 +57,9 @@ gcs_cp_folder <-
                 }
             }
         }
-        ## Check if the file names contain any error
-        ind <- which(all_file_names == "")
-        if (length(ind) != 0 && results$file_sizes[ind] != "0") {
-            warning(
-                "Non-standard file path is found:\n",
-                info$uri, "\n",
-                "this file will not be downloaded."
-            )
-            all_file_names <- all_file_names[-ind]
-        }
+        ## Remove place holder files
+        all_file_names <- all_file_names[all_file_names!=""]
+        all_file_names <- all_file_names[!is_folder_path(all_file_names)]
     }
     ## copy all files from source to destination
     if (length(all_file_names) != 0) {

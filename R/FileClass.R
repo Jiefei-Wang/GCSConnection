@@ -68,7 +68,7 @@ setMethod("[[", signature("FileClass"), function(x, i, exact = TRUE) {
         }
     }
     name <- names(x)[match_name(names(x), i, exact)]
-    if (is.null(name)) {
+    if (is.null(name)||length(name)==0) {
         return(NULL)
     }
     if (name == "copy_to") {
@@ -119,7 +119,7 @@ setMethod("names", signature("FileClass"),
           function(x)
           {
               c("full_path_vector", "bucket_name", "file_name",
-                "file_size", "file_type", "URI", "URL", "lastModified","billing_project",
+                "file_size", "file_type", "uri", "url", "lastModified","billing_project",
                 "copy_to", "delete", "get_connection")
           })
 

@@ -127,8 +127,11 @@ refresh_list <- function(x) {
 }
 
 
-## return the index of x[i], i can be either numeric or character
-## If return NULL, x[i] does not exist
+## return the position of `i` in `all_names`, i can be either
+## a numeric index or a character. If return NULL, `i` is 
+## not in `all_names`.
+## If `exact = FALSE`, the function will first try partial match,
+## then case insensitive match.
 match_name <- function(all_names, i, exact) {
     ## if i is an index, just return it
     if (is.numeric(i)) {
@@ -141,7 +144,17 @@ match_name <- function(all_names, i, exact) {
             distance <- abs(nchar(all_names[index]) - nchar(i))
             index <- index[which.min(distance)]
         } else {
-            index <- NULL
+            ## try case insensitive match
+            all_names_lower <- tolower(all_names)
+            i_lower <- tolower(i)
+            if(all(all_names_lower == all_names)&&
+               i_lower == i){
+                index <- NULL
+            }else{
+                index <- match_name(all_names = all_names_lower, 
+                                    i = i_lower, 
+                                    exact = exact)
+            }
         }
     } else {
         index <- which(all_names %in% i)

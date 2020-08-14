@@ -175,17 +175,29 @@ is_scalar_logical <- function(x) {
     is.logical(x) && length(x) == 1
 }
 
+exists_gcloud <- function(){
+    Sys.which("gcloud") != ""
+}
 
-update_gcloud_token <- function() {
+update_gcloud_token <- function(quiet) {
     gcloud_cmd <- c("auth", "print-access-token",
                     .gcloud_account())
     tryCatch({
         .credentials(
             system2("gcloud", gcloud_cmd, stdout = TRUE)
         )
+        TRUE
     },
     warning = function(w) {
-        stop(paste0(w$message, "\n"))
+        ## If failed, give the warning message
+        if(!quiet)
+            warning(paste0(w$message, "\n"))
+        FALSE
+    },
+    error = function(e){
+        if(!quiet)
+            stop(paste0(e$message, "\n"))
+        FALSE
     })
 }
 

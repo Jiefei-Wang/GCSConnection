@@ -2,12 +2,12 @@
 % Please edit documentation in R/FileClass.R
 \name{$,FileClass-method}
 \alias{$,FileClass-method}
-\alias{[[,FileClass,ANY,ANY-method}
+\alias{[[,FileClass-method}
 \title{Get an element from `FileClass` object}
 \usage{
 \S4method{$}{FileClass}(x, name)
 
-\S4method{[[}{FileClass,ANY,ANY}(x, i, exact = TRUE)
+\S4method{[[}{FileClass}(x, i, exact = TRUE)
 }
 \arguments{
 \item{x}{an object of class `FileClass`}
