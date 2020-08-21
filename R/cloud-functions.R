@@ -6,9 +6,9 @@
 #' the bucket requires Requester Pays, a billing project needs to be
 #' set in `gcs_set_billing_project`.
 #'
-#' @param description character(1). a google uri to the file 
-#'     that you want to connect to. If the value is a path
-#'     (e.g. "folder1/folder2/myfile") and the argument `bucket` is
+#' @param description A google uri to the file that you want to connect
+#'     to or a FileClass object returned by `gcs_dir`. If the value is a 
+#'     path(e.g. "folder1/folder2/myfile") and the argument `bucket` is
 #'     missing, it will be treated as a google uri without the common 
 #'     header `gs://`. If the argument `bucket` is not missing,
 #'     the value in `description` will be treated as a relative path.
@@ -23,7 +23,8 @@
 #' @param bucket character(1). The name of the bucket that the file is
 #'     located in. If a google uri to the file is provided in
 #'     `description`, this parameter will be ignored.
-#' @param billing_project logical(1) or character(1). If logical, whether users 
+#' @param billing_project logical(1) or character(1). If logical, 
+#'     whether users 
 #'     should pay the cost for accessing the data. The 
 #'     billing project is the project ID in `gcs_get_billing_project()`.
 #'     If character, it represents the project ID that will be charged
@@ -132,7 +133,8 @@ gcs_connection <-
 #' bucket, disk to bucket and bucket to disk.  Note that the existing
 #' destination file will be overwritten.
 #'
-#' @param from,to character(1). The path to the folder/file.  At least
+#' @param from,to the character path to a bucket/folder/file or 
+#'     a FolderClass/FileClass object returned by `gcs_dir`. At least
 #'     one path must be a google URI. It is recommended to explicitly
 #'     add a trailing "/" if the parameter is a path to a folder.
 #' @param recursive logical(1). Whether to recursively copy the files in
@@ -223,7 +225,8 @@ gcs_cp <- function(from, to, recursive = TRUE, billing_project = gcs_get_request
 #' request sent to the network, it is recommended to add a trailing
 #' slash if the path is a folder.
 #'
-#' @param path character(1), the path to the bucket/folder/file.
+#' @param path The character path to a bucket/folder/file or
+#'     a FolderClass/FileClass object returned by `gcs_dir`.
 #' @param delimiter Logical(1), whether to use `/` as a path
 #'     delimiter. If not, the path will be treated as the path to a
 #'     file even when it ends with `/`
@@ -282,6 +285,84 @@ gcs_dir <- function(path, delimiter = TRUE, billing_project = gcs_get_requester_
             billing_project = billing_project
         )
     }
+}
+
+#' Delete a file or a directory
+#' 
+#' Delete a file or a directory. The path to a directory 
+#' *must* have a tailing slash so that the function can 
+#' distinguish it from a file path.
+#' 
+#' @param quiet Whether to require the user's confirmation 
+#'     before deleting a directory.
+#' @inheritParams gcs_dir
+#' @return No return value.
+#' @examples 
+#' ## remove the entire content in a bucket
+#' ## gcs_rm("myBucket")
+#' 
+#' ## remove a folder in a bucket
+#' ## gcs_rm("myBucket/myFolder/")
+#' 
+#' ## remove a file in a bucket
+#' ## gcs_rm("myBucket/myFolder/myFile")
+#' 
+#' @export
+gcs_rm <- function(path, billing_project = gcs_get_requester_pays(),
+                   quiet = FALSE){
+    ## Convert any non-character object to character
+    temp <- nonchar_to_char(path, 
+                            billing_project = billing_project, 
+                            missing_billing_project = missing(billing_project))
+    path <- temp$x
+    billing_project <- temp$billing_project
+    
+    ## Convert logical value to billing project ID
+    billing_project <- get_billing_project(billing_project)
+    
+    info <- decompose_google_uri(path)
+    
+    if(info$is_folder&&
+        exist_folder(info$full_path_vector, billing_project)){
+        results <- list_files(
+            info$full_path_vector,
+            delimiter = NULL,
+            billing_project = billing_project
+        )
+        if(endsWith(info$uri,"/")){
+            all_files_uri <- paste0(info$uri, results$file_names)
+        }else{
+            all_files_uri <- paste0(info$uri, "/", results$file_names)
+        }
+        if(length(all_files_uri)==0)
+            return(invisible())
+        if(!quiet){
+            answer <- readline(
+                prompt = paste(
+                    length(all_files_uri),
+                    " files will be deleted,",
+                    "are you sure to continue?[y/n]: "
+                ))
+            answer <- tolower(answer)
+            if (answer == "n") {
+                return(invisible())
+            }
+        }
+        for(i in all_files_uri){
+            cur_file_info <- decompose_google_uri(i)
+            if(cur_file_info$is_folder){
+                cur_file_info$full_path_vector<-
+                    c(cur_file_info$full_path_vector,
+                      "")
+            }
+            delete_file(cur_file_info$full_path_vector, billing_project)
+        }
+        return(invisible())
+    }
+    if(exist_file(info$full_path_vector, billing_project)){
+        delete_file(info$full_path_vector, billing_project)
+    }
+    return(invisible())
 }
 
 

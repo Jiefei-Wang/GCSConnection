@@ -13,9 +13,9 @@ gcs_connection(
 )
 }
 \arguments{
-\item{description}{character(1). a google uri to the file 
-that you want to connect to. If the value is a path
-(e.g. "folder1/folder2/myfile") and the argument `bucket` is
+\item{description}{A google uri to the file that you want to connect
+to or a FileClass object returned by `gcs_dir`. If the value is a 
+path(e.g. "folder1/folder2/myfile") and the argument `bucket` is
 missing, it will be treated as a google uri without the common 
 header `gs://`. If the argument `bucket` is not missing,
 the value in `description` will be treated as a relative path.}
@@ -33,7 +33,8 @@ more detail.}
 located in. If a google uri to the file is provided in
 `description`, this parameter will be ignored.}
 
-\item{billing_project}{logical(1) or character(1). If logical, whether users 
+\item{billing_project}{logical(1) or character(1). If logical, 
+whether users 
 should pay the cost for accessing the data. The 
 billing project is the project ID in `gcs_get_billing_project()`.
 If character, it represents the project ID that will be charged

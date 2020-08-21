@@ -7,14 +7,16 @@
 gcs_cp(from, to, recursive = TRUE, billing_project = gcs_get_requester_pays())
 }
 \arguments{
-\item{from, to}{character(1). The path to the folder/file.  At least
+\item{from, to}{the character path to a bucket/folder/file or 
+a FolderClass/FileClass object returned by `gcs_dir`. At least
 one path must be a google URI. It is recommended to explicitly
 add a trailing "/" if the parameter is a path to a folder.}
 
 \item{recursive}{logical(1). Whether to recursively copy the files in
 the subfolders.}
 
-\item{billing_project}{logical(1) or character(1). If logical, whether users 
+\item{billing_project}{logical(1) or character(1). If logical, 
+whether users 
 should pay the cost for accessing the data. The 
 billing project is the project ID in `gcs_get_billing_project()`.
 If character, it represents the project ID that will be charged

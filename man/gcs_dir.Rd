@@ -7,13 +7,15 @@
 gcs_dir(path, delimiter = TRUE, billing_project = gcs_get_requester_pays())
 }
 \arguments{
-\item{path}{character(1), the path to the bucket/folder/file.}
+\item{path}{The character path to a bucket/folder/file or
+a FolderClass/FileClass object returned by `gcs_dir`.}
 
 \item{delimiter}{Logical(1), whether to use `/` as a path
 delimiter. If not, the path will be treated as the path to a
 file even when it ends with `/`}
 
-\item{billing_project}{logical(1) or character(1). If logical, whether users 
+\item{billing_project}{logical(1) or character(1). If logical, 
+whether users 
 should pay the cost for accessing the data. The 
 billing project is the project ID in `gcs_get_billing_project()`.
 If character, it represents the project ID that will be charged

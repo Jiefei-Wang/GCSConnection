@@ -25,38 +25,6 @@ gcs_cp_folder <-
         )
         
         all_file_names <- results$file_names
-        ## If there are too many files,
-        ## ask the use before downloading them
-        if (length(all_file_names) == 1000) {
-            answer <- readline(
-                prompt = paste(
-                    "More than 1000 files will be downloaded,",
-                    "are you sure to continue?[y/n]: "
-                ))
-            answer <- tolower(answer)
-            if (answer == "n") {
-                return()
-            } else {
-                repeat{
-                    token <- results$next_page_token
-                    results <- list_files(
-                        info$full_path_vector,
-                        delimiter = delimiter,
-                        next_page_token = token,
-                        billing_project = billing_project
-                    )
-                    
-                    all_file_names <- c(
-                        all_file_names,
-                        results$file_names
-                    )
-                    
-                    if (length(results$file_names) != 1000) {
-                        break
-                    }
-                }
-            }
-        }
         ## Remove place holder files
         all_file_names <- all_file_names[all_file_names!=""]
         all_file_names <- all_file_names[!is_folder_path(all_file_names)]

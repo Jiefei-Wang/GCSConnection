@@ -1,3 +1,7 @@
+Changes in version 1.1.6
++ add gcs_rm function
+Changes in version 1.1.5
++ Add gcloud into the default authentication process
 Changes in version 1.1.4
 + gcs_is_requester_pays supports uri
 + Better print format in gcs_get_cloud_auth 

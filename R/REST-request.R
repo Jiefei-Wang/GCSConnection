@@ -175,11 +175,40 @@ upload_data_from_disk <- function(disk_path, full_path_vector, billing_project =
     catch_error(r)
 }
 
+## full_path_vector = c("genomics-public-data", "1000-genomes", "bam")
 ## full_path_vector = c("bioconductor_test")
-## full_path_vector = c("bioconductor")
 ## list_files(full_path_vector)
+## list_files(full_path_vector,delimiter = NULL)
 ## full_path_vector: either a path to a folder/file or an empty string
-list_files <-
+list_files <- function(full_path_vector, delimiter = .delimiter(), 
+                       billing_project = NULL){
+    final_results <- list()
+    results <- list()
+    repeat{
+        token <- results$next_page_token
+        results <- list_files_internal(
+            full_path_vector = full_path_vector,
+            delimiter = delimiter,
+            next_page_token = token,
+            billing_project = billing_project
+        )
+        keys <- unique(c(names(final_results), names(results)))
+        final_results <- 
+            setNames(
+                mapply(c, final_results[keys], results[keys]), 
+                keys)
+        
+        if (is.null(results$next_page_token)) {
+            break
+        }
+    }
+    final_results$next_page_token <- NULL
+    final_results
+}
+
+
+
+list_files_internal <-
     function(full_path_vector, delimiter = .delimiter(), 
              next_page_token = NULL, billing_project = NULL)
     {
