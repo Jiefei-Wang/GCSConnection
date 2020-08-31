@@ -1,7 +1,7 @@
 Package: GCSConnection
 Type: Package
 Title: Creating R Connection with Google Cloud Storage
-Version: 1.1.6
+Version: 1.1.7
 Authors@R: person("Jiefei Wang", email = "szwjf08@gmail.com", role = c("cre"))
 Description: Create R 'connection' objects to google cloud storage
     buckets using the Google REST interface. Both read and write

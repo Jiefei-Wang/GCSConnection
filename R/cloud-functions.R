@@ -444,17 +444,25 @@ gcs_cloud_auth <-
     function(json_file, gcloud = FALSE, email = NULL, billing_project = NULL)
     {
         quiet <- FALSE
-        ## Determine default authentication method
+        ## If no argument is provided, we use the
+        ## default authentication process, it do the  
+        ## following items in order
+        ## 1. Find the credentials from the environment variable
+        ## 2. gcloud
+        ## 3. Error if both cannot be found
         if (missing(json_file) && !gcloud) {
             json_file <- get_credentials_from_environment()
             ## If fail to find the JSON file and gcloud exist,
             ## use gcloud instead
-            if(is.null(json_file) && exists_gcloud()){
-                gcloud = TRUE
-                quiet <- TRUE
+            if(is.null(json_file)){
+                if(exists_gcloud()){
+                    gcloud = TRUE
+                    quiet <- TRUE
+                }else{
+                    stop("No default credentials can be found!")
+                }
             }
         }
-        scope <- "https://www.googleapis.com/auth/devstorage.full_control"
         if (gcloud) {
             .is_gcloud(TRUE)
             .gcloud_token_time(Sys.time())
@@ -467,6 +475,7 @@ gcs_cloud_auth <-
                 gcs_cloud_auth(NULL)
             }
         } else {
+            scope <- "https://www.googleapis.com/auth/devstorage.full_control"
             .is_gcloud(FALSE)
             ## if the json file exist
             if (!is.null(json_file)) {
@@ -483,7 +492,6 @@ gcs_cloud_auth <-
                         gcs_set_billing_project(billing_project = billing_project)
                     }
                     .json_path(json_file)
-                    
                 },
                 warning = function(w) {
                     warning(
@@ -499,7 +507,7 @@ gcs_cloud_auth <-
                 }
                 )
             } else {
-                ## if the json file does not exist, clear out credentials
+                ## if json_file is NULL, clear out credentials
                 .json_path(NULL)
                 .credentials(NULL)
                 .billing_project(NULL, requester_pays = FALSE, showError = FALSE)
@@ -513,7 +521,7 @@ gcs_cloud_auth <-
 gcs_get_cloud_auth <- function() {
     token <- get_token()
     x <- list(
-        token_exist = is.null(token),
+        token_exist = !is.null(token),
         gcloud_auth = .is_gcloud(),
         gcloud_account = .gcloud_account(),
         billing_project = gcs_get_billing_project()
@@ -529,26 +537,35 @@ gcs_get_cloud_auth <- function() {
 print.auth <- function(x, ...) {
     ## print token
     if (x$token_exist) {
-        cat("Token:\tNULL\n")
+        token <- "******"
     } else {
-        cat("Token:\t******\n")
+        token <- "NULL"
     }
-    ## print billing project ID
-    cat("Billing project ID: ", x$billing_project, "\n")
-    ## print authen source
-    if (!x$gcloud_auth) {
-        cat("auth source:\tJSON file\n")
-    } else {
-        cat("auth source:\tgcloud\n")
+    if(length(x$billing_project)){
+        project <- x$billing_project
+    }else{
+        project <- "NULL"
+    }
+    ## Authen source
+    if (x$gcloud_auth) {
+        source  <- "gcloud"
         if (is.null(x$gcloud_account)) {
-            cat("auth account:\tDefault\n")
+            account <- "Default"
         } else {
-            cat(
-                "auth account:\t",
-                x$gcloud_account, "\n"
-            )
+            account <- x$gcloud_account
         }
+    } else {
+        source  <- "JSON file"
+        account  <- character(0)
     }
+    
+    cat("Token:              ", token, "\n")
+    cat("Billing project ID: ", project, "\n")
+    cat("Auth source:        ", source, "\n")
+    if (length(account)) {
+        cat("Auth account:       ", account, "\n")
+    }
+    
 }
 
 #' Requester Pays
@@ -573,13 +590,13 @@ print.auth <- function(x, ...) {
 gcs_set_billing_project <- function(billing_project = NULL, gcloud = FALSE){
     if(is.logical(billing_project)){
         stop("The argument <billing_project> must be a character.\n",
-             "If you want to enable your billing project in every function call,\n",
-             "you need to call the function `gcs_set_requester_pays`")
+             "If you want to enable your billing project in every function call by default,\n",
+             "you need to call `gcs_set_requester_pays(TRUE)`")
     }
     if(gcloud && !is.null(billing_project)){
         stop("billing_project is not NULL and gcloud is TRUE!")
     }
-    if(gcloud && is.null(billing_project)){
+    if(gcloud){
         .billing_project(
             system2("gcloud", c("config", "get-value", "project"), stdout = TRUE)
         )

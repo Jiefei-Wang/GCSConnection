@@ -1,5 +1,3 @@
-
-
 my_ceiling <- function(x, digit) {
     ceiling(x * 10^digit) / 10^digit
 }
