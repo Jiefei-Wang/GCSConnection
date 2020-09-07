@@ -449,18 +449,19 @@ gcs_cloud_auth <-
         ## following items in order
         ## 1. Find the credentials from the environment variable
         ## 2. gcloud
-        ## 3. Error if both cannot be found
+        ## 3. anonymous credential
         if (missing(json_file) && !gcloud) {
             json_file <- get_credentials_from_environment()
             ## If fail to find the JSON file and gcloud exist,
             ## use gcloud instead
             if(is.null(json_file)){
                 if(exists_gcloud()){
-                    gcloud = TRUE
+                    gcloud <- TRUE
                     quiet <- TRUE
-                }else{
-                    stop("No default credentials can be found!")
                 }
+                ## If no gcloud can be found, 
+                ## gcloud = FALSE
+                ## json_file = NULL
             }
         }
         if (gcloud) {
